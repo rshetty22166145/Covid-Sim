@@ -11,7 +11,7 @@ class SimManager:
 
     def __init__(self):
         # Instance of city for the sim
-        self.city = City(self, (5, 5))
+        self.city = City(self, (500, 5))
 
         # All people of the city
         self.people = {Person(self, Location(None, 110, 110)) for _ in range(10)}
