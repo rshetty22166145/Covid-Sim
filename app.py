@@ -1,94 +1,86 @@
 import pygame
 import logging
-import datetime
-from multiprocessing import Process, Pipe
-from threading import Thread
-from sim_manager import SimManager
+from sim_manager import GraphicsData
 from sim_renderer import SimRenderer
+from enum import IntEnum
 from typing import Optional
-from my_queue import Queue
-
-logging.basicConfig(filename='./logs/CovSim' +
-                             str(datetime.datetime.now()) + '.log',
-                    level=logging.DEBUG)
+from app_sim_comms import AppSimComms
+from my_pygame_components.typefield import TypeField
+from my_pygame_components.button import Button
+pygame.init()
 
 
 class App(SimRenderer):
+    """
+    Overhead App manager, manages app state, manages GUI displays and visuals
+    """
+    # Window size relative to smaller screen resolution dimension (usually height)
+    SCREEN_SIZE_CONSTANT = 0.8
+
+    # App state enum
+    class AppState(IntEnum):
+        MAIN = 0
+        SIM = 1
+
     def __init__(self):
         SimRenderer.__init__(self)
 
         # App while loop control flag
-        self.__running = True
+        self.__is_running = True
 
         # User screen dimensions, and app window dimensions
         self.SCREEN_DIMS = (pygame.display.Info().current_w,
                             pygame.display.Info().current_h)
-        self.WINDOW_DIMS = (500, 500)
+        self.WINDOW_DIMS = (int(min(self.SCREEN_DIMS) * 0.8),) * 2
+        logging.info("Window dims are " + str(self.WINDOW_DIMS))
 
         # App window and tick clock
-        self.__window = pygame.display.set_mode(self.WINDOW_DIMS, pygame.SCALED)
+        self.__window = pygame.display.set_mode(self.WINDOW_DIMS)
         self.__clock = pygame.time.Clock()
         # Event queue gotten from pygame each frame
         self.__events = []
 
-        # Class which runs the simulation
-        self.__sim_manager: Optional[SimManager] = None
-        # Connection between sim process and main app process
-        self.__conn, child_conn = Pipe()
-        # Process to run simulation
-        self.__sim_process = Process(target=App.run_simulation_process,
-                                     args=(self.__sim_manager, child_conn),
-                                     daemon=True)
-        # Stores events that happened in the sim
-        self.__sim_events = Queue()
-        # Stores an object containing sim object info to draw
-        self.__current_frame_info = {}
-        # Updated via receiver thread
-        self.__latest_frame_info = {}
+        # Class responsible for managing and communicating with the sim process
+        self.__sim_communicator = AppSimComms(self)
 
-    def sim_receiver(self):
-        while self.__running:
-            try:
-                events, frame_info = self.__conn.recv()
-                for event in events:
-                    self.__sim_events.enqueue(event)
-            except:
-                logging.error("Sim Manager sent data in an unexpected format.")
-
-    @staticmethod
-    def run_simulation_process(sim_manager, conn):
-        # Data received from main process
-        data_list = []
-
-        # Adds any received data to data_list, thread to prevent locking up the sim
-        def recv_data():
-            while True:
-                data_list.append(conn.recv())
-        Thread(target=recv_data, daemon=True).start()
-
-        while True:
-            # Progresses sim and gets the output of the progression
-            sim_output = sim_manager.progress_simulation(5)
+        # Class responsible for storing draw info of sim objects
+        self.__graphics_data = GraphicsData()
 
     def start(self):
         self.run_app()
 
     def stop(self):
-        self.__running = False
+        self.__is_running = False
 
     def run_app(self):
         logging.info("App Started")
 
-        while self.__running:
+        while self.__is_running:
+            # Clears screen
             self.__window.fill((50, 50, 50))
 
+            # Stores events, captures quit event
             self.__events = pygame.event.get()
             for event in self.__events:
                 if event.type == pygame.QUIT:
-                    self.__running = False
+                    self.stop()
 
-            self.__clock.tick()
+            # Updates display and ticks clock
+            pygame.display.update()
+            self.__clock.tick(60)
             pygame.display.set_caption("CovSim    FPS: " + str(self.__clock.get_fps()))
+
+            # Grabs frame update from communicator and updates graphics data object
+            # TODO: Move this into individual sim draw func once those are created
+            frame_info = self.__sim_communicator.get_latest_frame_info()
+
+            if frame_info is not None:
+                if GraphicsData.Types(frame_info["type"]) == GraphicsData.Types.STATIC:
+                    self.__graphics_data.buildings = frame_info["buildings"]
+                    self.__graphics_data.objects = frame_info["objects"]
+
+                elif GraphicsData.Types(frame_info["type"]) == GraphicsData.Types.DYNAMIC:
+                    self.__graphics_data.people = frame_info["people"]
 
         logging.info("App Ended")
 
