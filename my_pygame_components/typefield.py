@@ -1,7 +1,8 @@
 import pygame
+from component import InteractableComponent
 
 
-class TypeField:
+class TypeField(InteractableComponent):
     def __init__(self, pos, length, font, image, disable_negative, minimum_value):
         # Draw pos of field
         self.pos = pos

@@ -1,7 +1,8 @@
 import pygame
+from component import InteractableComponent
 
 
-class Button:
+class Button(InteractableComponent):
     def __init__(self, top_left_corner, size, image, box=False, border_color=(0, 0, 0), text_color=(40, 40, 40),
                  fill_color=(255, 255, 255), text="", border_thickness=0, font=None):
         # Position of top left corner of button.
