@@ -3,7 +3,6 @@ import logging
 from multiprocessing import Process, Pipe
 from threading import Thread, Lock
 from sim_manager import SimManager
-from sim_renderer import SimRenderer
 from typing import Optional
 from my_queue import Queue
 import copy
@@ -15,62 +14,62 @@ class AppSimComms:
     maintaining graphical info that it sends
     """
     def __init__(self, app):
-        self.__sim_process: Optional[Process] = None
+        self._sim_process: Optional[Process] = None
         # Connection between sim process and main app process
-        self.__conn = None
+        self._conn = None
 
         # Stores events that happened in the sim
-        self.__sim_events = Queue()
+        self._sim_events = Queue()
         # Updated via receiver thread
-        self.__latest_frame_info = None
-        self.__latest_frame_info_lock = Lock()
+        self._latest_frame_info = None
+        self._latest_frame_info_lock = Lock()
 
         # Parent app class
-        self.__app = app
+        self._app = app
 
     def get_latest_frame_info(self):
-        with self.__latest_frame_info_lock:
-            f = self.__latest_frame_info
+        with self._latest_frame_info_lock:
+            f = self._latest_frame_info
         return f
 
     def get_next_sim_event(self):
-        return self.__sim_events.dequeue()
+        return self._sim_events.dequeue()
 
     def is_sim_queue_empty(self):
-        return self.__sim_events.is_empty()
+        return self._sim_events.is_empty()
 
     def start_simulation(self):
-        if not self.__sim_process.is_alive():
+        if not self._sim_process.is_alive():
             # Creates duplex connection pair
-            self.__conn, child_conn = Pipe()
+            self._conn, child_conn = Pipe()
 
             # Creates and starts simulation process
-            self.__sim_process = Process(target=AppSimComms.run_simulation_process,
-                                         args=(SimManager(), child_conn),
-                                         daemon=True)
-            self.__sim_process.start()
+            self._sim_process = Process(target=AppSimComms.run_simulation_process,
+                                        args=(SimManager(), child_conn),
+                                        daemon=True)
+            self._sim_process.start()
 
             # Starts reception thread
             Thread(target=self.sim_receiver, daemon=True).start()
 
     def stop_simulation(self):
-        if self.__sim_process.is_alive():
+        if self._sim_process.is_alive():
             # Sends string to end process
-            self.__conn.send("END")
+            self._conn.send("END")
 
     def sim_receiver(self):
         while True:
             try:
                 # Receives sim data
-                events, frame_info = self.__conn.recv()
+                events, frame_info = self._conn.recv()
 
                 # Adds sim graphical events to queue
                 for event in events:
-                    self.__sim_events.enqueue(event)
+                    self._sim_events.enqueue(event)
 
                 # Sets latest frame with lock
-                with self.__latest_frame_info_lock:
-                    self.__latest_frame_info = frame_info
+                with self._latest_frame_info_lock:
+                    self._latest_frame_info = frame_info
             except TypeError:
                 logging.error("Sim Manager sent data in an unexpected format.")
             except (EOFError, OSError):
@@ -78,7 +77,7 @@ class AppSimComms:
                 # Or if own connection is closed
                 break
 
-        self.__conn.close()
+        self._conn.close()
 
     @staticmethod
     def run_simulation_process(sim_manager, conn):

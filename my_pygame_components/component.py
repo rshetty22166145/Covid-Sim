@@ -1,6 +1,7 @@
 import pygame
-from component_properties import Property, NumericProperty
-from typing import Union, Optional
+from my_pygame_components.component_properties import Property, NumericProperty
+from typing import Union, Optional, Any
+import logging
 
 
 class Component:
@@ -10,19 +11,53 @@ class Component:
     def __init__(self, **kwargs: Property):
         self.parent: Optional[Component] = None
 
+        # Whether to disable user interaction with this component
+        self._disable_interaction = False
+        # Disables interaction and hides component. Applies to container children
+        self._disable_component = False
+
         # Property list, initially defaults.
         self.properties = {"height": NumericProperty(0.0, component=self),
                            "width": NumericProperty(0.0, component=self),
                            "top": NumericProperty(0.0, component=self),
                            "left": NumericProperty(0.0, component=self)}
+
+        # Initially component is un-finalized with props not yet added
+        # add_child calls finalize after parent is set
+        self._is_finalized = False
+        self._surface = None
+        self._kwargs = kwargs
+
+    def __str__(self):
+        return type(self).__name__
+
+    def __repr__(self):
+        return type(self).__name__
+
+    def update_property(self, name: str, new_value: Any) -> bool:
+        """Update specified property's value and calls a reaction method.
+        Return success"""
+        old_value = self.properties[name].get_value()
+        # Updates value, if successful, call reaction
+        if self.properties[name].update_value(new_value):
+            self.on_update_property(name, old_value)
+            return True
+        return False
+
+    def on_update_property(self, name: str, old_value: Any):
+        pass
+
+    def finalize(self):
         # Adds any specified props and overrides defaults
-        self.add_properties(**kwargs)
+        self.add_properties(**self._kwargs)
+        self._kwargs = {}
 
         # Creates component surface
-        self.__surface = self.generate_surface()
+        self._surface = self.generate_surface()
 
-        # Whether to disable user interaction with this component
-        self.__disable_interaction = False
+        self._is_finalized = True
+
+        logging.info(str(self) + " has finalized, with properties: " + str(self.properties))
 
     def generate_surface(self):
         """Return a new surface for this component based on its properties"""
@@ -50,17 +85,30 @@ class Component:
         Add specified kwargs to property dict
         """
         for prop_name in kwargs:
-            # Add Property and ensure that special props are of the correct type
-            if prop_name in ("height", "width", "top", "left"):
-                assert isinstance(kwargs[prop_name], NumericProperty)
-            self.properties[prop_name] = kwargs[prop_name]
-            # Finalize property
-            self.properties[prop_name].finalize(self)
+            self.add_property(prop_name, kwargs[prop_name], allow_override=True)
+
+    def add_property(self, name: str, prop: Property, allow_override=False) -> bool:
+        """Adds given property with given name to properties. If allow_override is
+        False, property will fail to add if it already exists. Otherwise specified prop will
+        be updated via a call to update_property. Return success"""
+        #if name not in self.properties:
+        self.properties[name] = prop
+        # Finalize property
+        self.properties[name].finalize(self)
+
+        return True
+
+        #elif allow_override:
+        #    return self.update_property(name, prop.get_pure_value())
+
+        #return False
 
     def handle_component(self, events):
         """Handles own events and renders self"""
-        self.handle_events(events)
-        self.render_component()
+        if not self._disable_component:
+            if not self._disable_interaction:
+                self.handle_events(events)
+            self.render_component()
 
     def handle_events(self, events):
         """
@@ -76,14 +124,39 @@ class Component:
         """
         raise NotImplementedError
 
-    def get_surface(self):
-        return self.__surface
+    def get_surface(self) -> Optional[pygame.Surface]:
+        """
+        Return the component's surface, and ensure it adheres to width and height.
+        Override this method to add more property enforcers, but be sure to call this
+        parent method to ensure width and height are always enforced
+        """
+        if self._disable_component:
+            return None
+
+        # Checks if surface conforms to height and width properties
+        elif self._surface.get_height() == self.properties["height"].get_value() and \
+                self._surface.get_width() == self.properties["width"].get_value():
+
+            return self._surface
+
+        # Returns resized surface otherwise
+        return pygame.transform.smoothscale(self._surface, (self.properties["width"].get_value(),
+                                                            self.properties["height"].get_value()))
 
     def disable_interaction(self):
-        self.__disable_interaction = True
+        self._disable_interaction = True
 
     def enable_interaction(self):
-        self.__disable_interaction = False
+        self._disable_interaction = False
+
+    def disable_component(self):
+        self._disable_component = True
+
+    def enable_component(self):
+        self._disable_component = False
+
+    def is_disabled(self) -> bool:
+        return self._disable_component
 
 
 class Container(Component):
@@ -93,25 +166,41 @@ class Container(Component):
     def __init__(self, **kwargs: Property):
         Component.__init__(self, **kwargs)
 
-        self.__children = set()
+        self._children = set()
 
     def add_child(self, child) -> None:
-        """Set child's parent to self and add child to children"""
+        """Set child's parent to self and add child to children.
+        Makes sure the component is finalized"""
         child.parent = self
-        self.__children.add(child)
+        child.finalize()
+        self._children.add(child)
+
+    def remove_child(self, child) -> bool:
+        """Kill the child and return whether the murder was a success.
+        I am just a function, I am just following orders."""
+        if child in self._children:
+            self._children.remove(child)
+            return True
+        return False
+
+    def get_children(self) -> set[Component]:
+        return self._children
 
     def handle_component(self, events):
         """Renders component as well as its children, and also calls event handlers"""
-        self.handle_events(events)
-        self.render_component()
+        Component.handle_component(self, events)
 
-        for child in self.__children:
-            # Handles component for each child
-            child.handle_component(events)
+        if not self._disable_component:
+            for child in self._children:
 
-            # Draws child surface relative to container surface
-            self.__surface.blit(child.get_surface(), (child.properties["left"].get_value(),
-                                                      child.properties["top"].get_value()))
+                # Handles component for each child
+                child.handle_component(events)
+
+                # Draws child surface relative to container surface. child surf is None if disabled
+                child_surf = child.get_surface()
+                if child_surf is not None:
+                    self._surface.blit(child.get_surface(), (child.properties["left"].get_value(),
+                                                             child.properties["top"].get_value()))
 
     def render_component(self):
         raise NotImplementedError
@@ -121,16 +210,18 @@ class WindowComponent(Container):
     """
     Stores the main pygame window
     """
-    def __init__(self, window: pygame.Surface, width: int, height: int, background_color=(0, 0, 0)):
+    def __init__(self, width: int, height: int, background_color=(0, 0, 0)):
         # Window is a container with no parents
         Container.__init__(self,
                            width=NumericProperty(width),
                            height=NumericProperty(height),
                            background_color=Property(background_color))
+        self.finalize()
 
-        # Surface set to app display window
-        self.__surface = window
+    def generate_surface(self):
+        return pygame.display.set_mode((int(self.properties["width"].get_value()),
+                                        int(self.properties["height"].get_value())))
 
     def render_component(self):
         # Clears surface with a fill
-        self.__surface.fill(self.properties["background_color"].get_value())
+        self._surface.fill(self.properties["background_color"].get_value())

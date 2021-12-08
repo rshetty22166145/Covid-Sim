@@ -2,9 +2,6 @@ from typing import Any
 
 
 class AbstractQueue:
-    def __init__(self) -> None:
-        """Initialize new Queue"""
-
     def is_empty(self) -> bool:
         """Return if queue is empty"""
         raise NotImplementedError
@@ -25,8 +22,6 @@ class AbstractQueue:
 class Queue(AbstractQueue):
 
     def __init__(self):
-        AbstractQueue.__init__(self)
-
         # Tracks id of next item being added
         self.__current_id = 0
         # Tracks id of item to be dequeued next
