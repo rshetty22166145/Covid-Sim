@@ -53,7 +53,7 @@ class App(AppGui):
             color=Property((150, 150, 150)), hover_color=Property((150, 250, 150))
         )
         self._window.add_child(self.vanishing_rect)
-        #self._window.add_child(self.resizing_rect)
+        self._window.add_child(self.resizing_rect)
 
         self._window.add_child(RectangleComponent(
             width=NumericProperty(0.1, is_relative=True, relative_prop_name="width"),
@@ -83,7 +83,7 @@ class App(AppGui):
         else:
             self.vanishing_rect.enable_component()
 
-        #self.resizing_rect.update_property("width", 100 + math.sin(time.time()) * 20)
+        self.resizing_rect.update_property("width", 100 + math.sin(time.time()) * 20)
 
 
 # Grabs frame update from communicator and updates graphics data object

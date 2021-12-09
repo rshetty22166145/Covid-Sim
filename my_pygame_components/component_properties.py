@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Optional, Any
+from typing import Optional, Any, Callable
 import my_pygame_components.component as comp
 import logging
 
@@ -8,17 +8,34 @@ class Property:
     """
     Stores a GUI Component property
 
-    Attributes:
-        - value: Value of this property
-        - name: String name of the property
-        - component: Component to which this property belongs
+    Representation Invariants:
+        - If property is relative, it must specify a relative prop name
+
+    Instance Attributes:
+        - _value: The value of this property. If prop is relative, this attribute must be a Callable which
+        takes the parent value and outputs
+        - _is_relative: Is this property value gotten from a parent
+        - _relative_prop_name: The name of the parent property to take from
     """
-    def __init__(self, value: Any, component: Optional[comp.Component] = None):
+    def __init__(self, value: Any, component: Optional[comp.Component] = None,
+                 is_relative=False, relative_prop_name=None):
+
         self._value = value
         self._component = component
 
+        self._is_relative = is_relative
+        self._relative_prop_name = relative_prop_name
+
+        self._is_finalized = False
+
     def finalize(self, component):
+        """Must be called before property is to be used"""
+        self._is_finalized = True
         self._component = component
+
+    def is_finalized(self):
+        """Get if this prop was finalized"""
+        return self._is_finalized
 
     def update_value(self, new_value: Any) -> bool:
         """Update value as long as new_value is the same type"""
@@ -46,18 +63,12 @@ class NumericProperty(Property):
     """
     Numerical Properties. If a property is relative, it must specify the parent property
     to take from
-
-    Representation Invariants:
-        - self.is_relative == False or self.relative_prop_name is not None
-
-    Attributes:
-        - is_relative: It this property a proportion of a parent property
-        - relative_prop_name: The name of the numerical parent property to calculate from
     """
     def __init__(self, value: float, component: Optional[comp.Component] = None,
                  is_relative=False, relative_prop_name: Optional[str] = None):
-        logging.info("NumericalProperty created with value " + str(value))
-        Property.__init__(self, value, component)
+
+        Property.__init__(self, value, component=component, is_relative=is_relative)
+
         self._value = float(self._value)
 
         self._is_relative = is_relative

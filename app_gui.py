@@ -7,7 +7,7 @@ import logging
 class AppGui:
     """Runs the GUI by calling the component tree"""
     # Window size relative to smaller screen resolution dimension (usually height)
-    SCREEN_SIZE_CONSTANT = 0.3
+    SCREEN_SIZE_CONSTANT = 0.8
 
     def __init__(self):
         # User screen dimensions, and app window dimensions

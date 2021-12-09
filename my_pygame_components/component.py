@@ -134,8 +134,8 @@ class Component:
             return None
 
         # Checks if surface conforms to height and width properties
-        elif self._surface.get_height() == self.properties["height"].get_value() and \
-                self._surface.get_width() == self.properties["width"].get_value():
+        elif self._surface.get_height() == int(self.properties["height"].get_value()) and \
+                self._surface.get_width() == int(self.properties["width"].get_value()):
 
             return self._surface
 

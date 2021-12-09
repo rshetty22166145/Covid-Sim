@@ -1,121 +1,73 @@
-class Node():
-    """A node class for A* Pathfinding"""
-
-    def __init__(self, parent=None, position=None):
-        self.parent = parent
-        self.position = position
-
-        self.g = 0
-        self.h = 0
-        self.f = 0
-
-    def __eq__(self, other):
-        return self.position == other.position
+from my_path_finding.geometry import *
 
 
-def astar(maze, start, end):
-    """Returns a list of tuples as a path from the given start to the given end in the given maze"""
+def get_paths(shapes: list[Shape],
+              vector: Vector,
+              person_radius: float = 0.0) -> list[Path]:
+    """
+    Return a set of paths, each of which leads from the starting point
+    of vector to its end point without intersecting any shapes
 
-    # Create start and end node
-    start_node = Node(None, start)
-    start_node.g = start_node.h = start_node.f = 0
-    end_node = Node(None, end)
-    end_node.g = end_node.h = end_node.f = 0
+    Possible Optimizations:
+        - Circle vertices don't need to be checked for intersection, both circle vertices will always be valid
+        - Instead of finding all paths (for loop in recursion), choose random path
+    """
+    # Inflates shapes by person radius so person doesnt collide with shapes
+    if person_radius != 0:
+        shapes = [s.get_inflated(person_radius) for s in shapes]
 
-    # Initialize both open and closed list
-    open_list = []
-    closed_list = []
+    # Set of paths which will be modified by the recursive tree
+    paths = []
 
-    # Add the start node
-    open_list.append(start_node)
+    def recursive_tree(cur_vec: Vector,
+                       path_history=()) -> None:
 
-    # Loop until you find the end
-    while len(open_list) > 0:
+        # List of shapes intersecting with vector ordered by distance from starting pt (ascending)
+        cur_shapes = get_intersecting_shapes(shapes, cur_vec)
 
-        # Get the current node
-        current_node = open_list[0]
-        current_index = 0
-        for index, item in enumerate(open_list):
-            if item.f < current_node.f:
-                current_node = item
-                current_index = index
+        # If all shapes have been successfully bypassed, then a path was formed
+        if len(cur_shapes) == 0:
+            paths.append(path_history + (cur_vec,))
+        else:
+            shape = cur_shapes[0]
+            vertices = shape.get_vertices(cur_vec)
 
-        # Pop current off open list, add to closed list
-        open_list.pop(current_index)
-        closed_list.append(current_node)
+            # Vectors going from the start of cur_vec to each vertex
+            start_to_vertex_vectors = [Vector(start=cur_vec.start, end=v) for v in vertices]
+            # Vectors going from each vertex to the enc of cur_vec
+            vertex_to_end_vectors = [Vector(start=v, end=cur_vec.end) for v in vertices]
 
-        # Found the goal
-        if current_node == end_node:
-            path = []
-            current = current_node
-            while current is not None:
-                path.append(current.position)
-                current = current.parent
-            return path[::-1]  # Return reversed path
+            # A vertex is only accepted if its corresponding vectors in the above 2 vector
+            # lists don't intersect the shape
+            vertices = [
+                vertices[i] for i in range(len(vertices))
+                if not(
+                    shape.is_vector_intersect(start_to_vertex_vectors[i]) or
+                    shape.is_vector_intersect(vertex_to_end_vectors[i])
+                )]
+            # Initiates recursion for each valid vertex
+            for vertex in vertices:
+                # passes all but first shape, passes new vector from the vertex to the end of the current one
+                # Adds segment from start to vertex to the path history
+                recursive_tree(Vector(start=vertex, end=cur_vec.end),
+                               path_history=path_history + (Vector(start=cur_vec.start, end=vertex),))
 
-        # Generate children
-        children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1), (1, 1)]:  # Adjacent squares
+    recursive_tree(vector)
 
-            # Get node position
-            node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
-
-            # Make sure within range
-            if node_position[0] > (len(maze) - 1) or node_position[0] < 0 or node_position[1] > (
-                    len(maze[len(maze) - 1]) - 1) or node_position[1] < 0:
-                continue
-
-            # Make sure walkable terrain
-            if maze[node_position[0]][node_position[1]] != 0:
-                continue
-
-            # Create new node
-            new_node = Node(current_node, node_position)
-
-            # Append
-            children.append(new_node)
-
-        # Loop through children
-        for child in children:
-
-            # Child is on the closed list
-            for closed_child in closed_list:
-                if child == closed_child:
-                    continue
-
-            # Create the f, g, and h values
-            child.g = current_node.g + 1
-            child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
-                        (child.position[1] - end_node.position[1]) ** 2)
-            child.f = child.g + child.h
-
-            # Child is already in the open list
-            for open_node in open_list:
-                if child == open_node and child.g > open_node.g:
-                    continue
-
-            # Add the child to the open list
-            open_list.append(child)
+    new_paths = [Path([vec.start for vec in path]) for path in paths]
+    for i in range(len(new_paths)):
+        new_paths[i].points.append(paths[i][-1].end)
+    return new_paths
 
 
-def main():
-    maze = [[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-
-    start = (0, 0)
-    end = (7, 6)
-
-    path = astar(maze, start, end)
-    print(path)
+def get_shortest_path(paths: set[list[Vector]]) -> list[Vector]:
+    """Return the shortest path from the paths provided"""
 
 
-if __name__ == '__main__':
-    main()
+def get_intersecting_shapes(shapes: list[Shape],
+                            vector: Vector
+                            ) -> list[Shape]:
+    """
+    Return all shapes that intersect the given vector
+    """
+    return [shape for shape in shapes if shape.is_vector_intersect(vector)]
