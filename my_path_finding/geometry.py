@@ -1,6 +1,8 @@
 from __future__ import annotations
 import math
 from my_path_finding.helpers import *
+from typing import Any, Callable, Union, Optional
+from my_path_finding.helpers import midpoint, dist
 
 
 class Point:
@@ -8,8 +10,29 @@ class Point:
     Representation of a 2D point
     """
     def __init__(self, x: float, y: float):
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
+
+    def _perform_operation(self, other: Any,
+                           operation: Callable[[float, Union[int, float]], float]):
+        if isinstance(other, (float, int)):
+            return Point(operation(self.x, other), operation(self.y, other))
+        elif isinstance(other, (list, Point, tuple)) and len(other) == 2:
+            return Point(operation(self.x, other[0]), operation(self.y, other[1]))
+        else:
+            raise TypeError("Can only add numerical values to points")
+
+    def __add__(self, other: Any) -> Point:
+        return self._perform_operation(other, lambda a, b: a + b)
+
+    def __sub__(self, other: Any) -> Point:
+        return self._perform_operation(other, lambda a, b: a - b)
+
+    def __truediv__(self, other) -> Point:
+        return self._perform_operation(other, lambda a, b: a / b)
+
+    def __mul__(self, other) -> Point:
+        return self._perform_operation(other, lambda a, b: a * b)
 
     def __getitem__(self, item):
         if not isinstance(item, int):
@@ -23,6 +46,9 @@ class Point:
 
     def __str__(self):
         return "Point" + str(tuple(self))
+
+    def __len__(self):
+        return 2
 
     def __repr__(self):
         return self.__str__()
@@ -76,12 +102,20 @@ class Shape:
         """Return if the vector intersects the shape, exclusive of shape edges"""
         raise NotImplementedError
 
-    def get_vertices(self, vector: Vector) -> list[Point]:
+    def is_point_inside(self, point: Point):
+        """Return if point is inside the shape. If point is on edges, does not count"""
+        raise NotImplementedError
+
+    def get_vertices(self, vector: Optional[Vector] = None) -> list[Point]:
         """Return significant points of the shape given a vector"""
         raise NotImplementedError
 
     def get_inflated(self, radius: float) -> Shape:
         """Return new shape expanded in all directions by radius while maintaining center"""
+        raise NotImplementedError
+
+    def get_bounding_box_area(self) -> float:
+        """Return the area of the rectangle which bounds this shape"""
         raise NotImplementedError
 
 
@@ -131,7 +165,7 @@ class Circle(Shape):
         else:
             return False
 
-    def get_vertices(self, vector: Vector) -> list[Point]:
+    def get_vertices(self, vector: Optional[Vector]) -> list[Point]:
         """Return the points where the circle intersects with the line perpendicular
         to the vector and going through the center of the circle.
 
@@ -161,6 +195,14 @@ class Circle(Shape):
             radius=self.radius + radius
         )
 
+    def get_bounding_box_area(self) -> float:
+        """Get bounding box area of circle"""
+        return (self.radius ** 2) * 4
+
+    def is_point_inside(self, point: Point):
+        """Return if point is inside the shape. If point is on edges, does not count"""
+        return dist((self.center_x, self.center_y), (point.x, point.y)) < self.radius
+
 
 class Rectangle(Shape):
     """
@@ -177,7 +219,7 @@ class Rectangle(Shape):
         sides = self.get_sides()
         return any(are_vectors_intersecting(side, vector) for side in sides) or self.is_vector_inside(vector)
 
-    def get_vertices(self, vector: Vector) -> list[Point]:
+    def get_vertices(self, vector: Optional[Vector] = None) -> list[Point]:
         """Return all 4 corners of the rectangle"""
         return [
             Point(self.left, self.top),
@@ -197,14 +239,19 @@ class Rectangle(Shape):
             height=self.height + radius * 2,
         )
 
+    def get_bounding_box_area(self) -> float:
+        """Do the width times the height yknow? skrrt skrrt"""
+        return self.width * self.height
+
+    def is_point_inside(self, point: Point):
+        """Return if point is inside the shape. If point is on edges, does not count"""
+        return self.left < point.x < self.left + self.width and \
+            self.top < point.y < self.top + self.height
+
     def is_vector_inside(self, vector: Vector):
-        """Return if start or end of vector is inside the rectangle"""
-
-        def inside_rect(pt: Point):
-            return self.left < pt.x < self.left + self.width and \
-                   self.top < pt.y < self.top + self.height
-
-        return inside_rect(vector.start) or inside_rect(vector.end)
+        """Return if start, end, or midpt of vector is inside the rectangle"""
+        return self.is_point_inside(vector.start) or \
+            self.is_point_inside(vector.end) or self.is_point_inside(midpoint(vector))
 
     def get_sides(self) -> list[Vector]:
         """Return all sides of the rectangle as vectors (start and end hold no significance for these)"""

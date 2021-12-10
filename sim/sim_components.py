@@ -12,34 +12,19 @@ class Person:
         self.is_infected = False
 
 
-class Interactable:
-    """
-    Types:
-        - Medical
-        - Food
-        - Travel
-        - Home
-    """
+class Building:
     class Types(IntEnum):
         MEDICAL = 0
         FOOD = 1
         TRAVEL = 2
         HOME = 3
+        WORK = 4
 
-    def __init__(self, sim):
+    def __init__(self, sim, purpose: Types):
         # Parent sim manager object
         self.sim = sim
 
-        # TODO: Interactables can store infection on them
-        # TODO: Determine types of interactables
-
-
-class Building:
-    def __init__(self, sim, interactables: set[Interactable]):
-        # Parent sim manager object
-        self.sim = sim
-
-        self.interactables = interactables
+        self.purpose = purpose
 
 
 class City:

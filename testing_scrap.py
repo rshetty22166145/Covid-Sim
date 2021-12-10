@@ -1,6 +1,6 @@
 import pygame
 from contextlib import contextmanager
-from my_path_finding.path_finding import get_paths
+from my_path_finding.path_finding import get_paths, get_modified_paths_point, get_modified_paths_vector
 from my_path_finding.geometry import *
 import colorsys
 import random
@@ -111,9 +111,6 @@ def random_shape_path_test():
 
 
 def rect_collision_test():
-    surf = pygame.display.set_mode(SCREEN_SIZE)
-    clock = pygame.time.Clock()
-
     rect = Rectangle(100, 100, 100, 100)
     vecs = [
         # point on edge
@@ -137,24 +134,38 @@ def rect_collision_test():
         Vector(Point(200, 100), Point(10, 10))
     ]
 
-    running = True
-    while running:
-
-        surf.fill((70, 70, 70))
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
+    with draw_stuff(500, 500) as surf:
         draw_rect(rect, surf, (255, 255, 255))
 
         for vec in vecs:
             col = (255, 0, 0) if rect.is_vector_intersect(vec) else (0, 255, 0)
             draw_vector(vec, surf, col, start_circle=5, end_circle=5)
 
-        pygame.display.update()
-        clock.tick(200)
-        pygame.display.set_caption("CovSim    FPS: " + str(clock.get_fps()))
+
+def test_modified_path_points():
+    rect = Rectangle(100, 100, 100, 100)
+    path = Path([Point(10, 150), Point(150, 170), Point(300, 50)])
+
+    new_paths = get_modified_paths_point(rect, path, 1)
+
+    with draw_stuff(500, 500) as surf:
+        draw_rect(rect, surf, (255, 255, 255))
+        draw_path(path, surf, (0, 0, 0))
+
+        draw_paths(new_paths, surf)
 
 
-rect_collision_test()
+def test_modified_path_vectors():
+    rect = Rectangle(100, 100, 100, 100)
+    path = Path([Point(60, 110), Point(300, 180)])
+
+    new_paths = get_modified_paths_vector(rect, path, Vector(path.points[0], path.points[1]))
+
+    with draw_stuff(500, 500) as surf:
+        draw_rect(rect, surf, (255, 255, 255))
+        draw_path(path, surf, (0, 0, 0))
+
+        draw_paths(new_paths, surf)
+
+
+test_modified_path_vectors()

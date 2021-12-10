@@ -11,6 +11,11 @@ def ccw(A: g.Point, B: g.Point, C: g.Point) -> bool:
     return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x)
 
 
+def midpoint(vector: g.Vector) -> g.Point:
+    """Returns midpoint of vector"""
+    return vector.start + ((vector.end - vector.start) / 2)
+
+
 def intersect_points(A: g.Point, B: g.Point, C: g.Point, D: g.Point) -> bool:
     """Checks Instersection of segment AB and CD"""
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
@@ -18,6 +23,8 @@ def intersect_points(A: g.Point, B: g.Point, C: g.Point, D: g.Point) -> bool:
 
 def are_vectors_intersecting(vector1: g.Vector, vector2: g.Vector) -> bool:
     """Return whether vectors intersect"""
+    # Calling 4 times with shuffled parameters is necessary since the algorithm is
+    # inconsistent depending on input order.
     return intersect_points(vector1.start, vector1.end, vector2.start, vector2.end) and \
         intersect_points(vector1.end, vector1.start, vector2.start, vector2.end) and \
         intersect_points(vector1.start, vector1.end, vector2.end, vector2.start) and \

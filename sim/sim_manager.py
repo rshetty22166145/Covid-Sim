@@ -45,8 +45,11 @@ class SimManager:
         self.__graphics_data.objects = [tuple(i for _ in range(5)) for i in range(20, 30)]
         self.__graphics_data.people = [tuple(i for _ in range(5)) for i in range(40, 50)]
 
-        #
-        self.city = City()
+        # Generate city
+        self.city = self.generate_city()
+
+    def generate_city(self) -> City:
+        """"""
 
     def progress_simulation(self, time_delta_ms: int) -> dict:
         """
