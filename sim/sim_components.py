@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 from enum import IntEnum
+from geometry.geometry import Rectangle
 
 
 class Person:
@@ -13,17 +14,27 @@ class Person:
 
 
 class Building:
-    class Types(IntEnum):
-        MEDICAL = 0
-        FOOD = 1
-        TRAVEL = 2
-        HOME = 3
-        WORK = 4
+    """
 
-    def __init__(self, sim, purpose: Types):
+    Instance Attributes
+        - num_floors: more floors means less chance of infection with more people
+        - rect: building world dimensions and location via DU measurements (10 DU = 1 meter)
+        - purpose: purpose of the building
+    """
+    class Types(IntEnum):
+        MEDICAL = 0  # Provides medical care (hospital)
+        COMMERCIAL = 1  # Gives food and happiness (mall, restaurant)
+        TRAVEL = 2  # Allows travel outside of city (airport)
+        RESIDENTIAL = 3  # Can be assigned as someone's home (apartment building)
+        INDUSTRIAL = 4  # Provides jobs, workplace (office complex, factory)
+
+    def __init__(self, sim, rect: Rectangle, purpose: Types, floors: int):
         # Parent sim manager object
         self.sim = sim
 
+        self.rect = rect
+
+        self.num_floors = floors
         self.purpose = purpose
 
 

@@ -1,5 +1,5 @@
 from __future__ import annotations
-import my_path_finding.geometry as g
+import geometry.geometry as g
 
 
 def dist(p, q):

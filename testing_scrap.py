@@ -1,12 +1,13 @@
 import pygame
 from contextlib import contextmanager
-from my_path_finding.path_finding import get_paths, get_modified_paths_point, get_modified_paths_vector
-from my_path_finding.geometry import *
+from geometry.path_finding import get_paths, get_modified_paths_point, get_modified_paths_vector
+from geometry.geometry import *
 import colorsys
 import random
+from sim.city_generator import get_city_rectangle_layout
 pygame.init()
 
-SCREEN_SIZE = (520, 520)
+SCREEN_SIZE = (720, 720)
 
 
 @contextmanager
@@ -58,49 +59,65 @@ def draw_vector(vector: Vector, screen: pygame.Surface, color: tuple[int, int, i
         draw_circle(Circle(center_x=vector.end.x, center_y=vector.end.y, radius=end_circle), screen, color, width=1)
 
 
-def color_brewer(num: int) -> tuple[int, int, int]:
+def color_brewer(num: int) -> list[tuple[int, ...]]:
+    if num == 0:
+        return []
     val = 0.7 / num
     return [tuple(int(c * 255) for c in colorsys.hsv_to_rgb(i * val, 0.8, 0.8)) for i in range(num)]
 
 
 def random_shape_path_test():
     rects = []
-    circles = []
 
-    for _ in range(10):
-        left = random.randint(50, SCREEN_SIZE[0] - 50)
-        top = random.randint(50, SCREEN_SIZE[1] - 50)
-        width = random.randint(0, SCREEN_SIZE[0] - left)
-        height = random.randint(0, SCREEN_SIZE[1] - top)
-        width = 50
-        height = 50
-        rects.append(Rectangle(left=left, top=top, width=width, height=height))
+    # for _ in range(25):
+    #     left = random.randint(20, SCREEN_SIZE[0] - 20)
+    #     top = random.randint(20, SCREEN_SIZE[1] - 20)
+    #     width = random.randint(0, SCREEN_SIZE[0] - left)
+    #     height = random.randint(0, SCREEN_SIZE[1] - top)
+    #     width = 20
+    #     height = 20
+    #     rects.append(Rectangle(left=left, top=top, width=width, height=height))
 
-    for _ in range(0):
-        left = random.randint(50, SCREEN_SIZE[0] - 50)
-        top = random.randint(50, SCREEN_SIZE[1] - 50)
-        min_dist = min(SCREEN_SIZE[0] - left, SCREEN_SIZE[1] - top)
-        radius = random.randint(0, min_dist)
-        radius = 50
-        circles.append(Circle(center_x=left, center_y=top, radius=radius))
+    for x in range(10):
+        for y in range(10):
+            width = 20
+            height = 20
+            gap = 20
 
-    shapes = rects + circles
+            left = width + (width + gap) * x
+            top = height + (height + gap) * y
+
+            rects.append(Rectangle(left=left, top=top, width=width, height=height))
+
+    rects = get_city_rectangle_layout(4, 4, 100, 40, 100)
+
+    shapes = rects
 
     surf = pygame.display.set_mode(SCREEN_SIZE)
     clock = pygame.time.Clock()
 
+    path_vector = Vector(Point(x=SCREEN_SIZE[0] - 20, y=SCREEN_SIZE[1] - 20), Point(x=20, y=20))
+
+    index = 0
+
     running = True
     while running:
-        paths = get_paths(shapes, Vector(Point(x=SCREEN_SIZE[0] - 20, y=SCREEN_SIZE[1] - 20), Point(x=20, y=20)), 0)
-
         surf.fill((70, 70, 70))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                [path_vector.start, path_vector.end][index].x = pygame.mouse.get_pos()[0]
+                [path_vector.start, path_vector.end][index].y = pygame.mouse.get_pos()[1]
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    index = 0
+                elif event.key == pygame.K_2:
+                    index = 1
 
-        for circ in circles:
-            draw_circle(circ, surf, (255, 255, 255))
+        paths, is_endpt_blocked = get_paths(shapes, path_vector, person_radius=0, max_paths=10)
+
         for rect in rects:
             draw_rect(rect, surf, (255, 255, 255))
         draw_paths(paths, surf)
@@ -155,17 +172,46 @@ def test_modified_path_points():
         draw_paths(new_paths, surf)
 
 
+def test_city_layout():
+    buildings = SimManager.generate_city(4, 4, 100, 70, 100)
+
+    with draw_stuff() as surf:
+        for rect in buildings:
+            draw_rect(rect, surf, (255, 255, 255), width=0)
+
+
 def test_modified_path_vectors():
     rect = Rectangle(100, 100, 100, 100)
-    path = Path([Point(60, 110), Point(300, 180)])
+    path = Path([Point(150, 90), Point(80, 300)])
 
-    new_paths = get_modified_paths_vector(rect, path, Vector(path.points[0], path.points[1]))
+    index = 0
 
-    with draw_stuff(500, 500) as surf:
+    surf = pygame.display.set_mode(SCREEN_SIZE)
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        surf.fill((70, 70, 70))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                path.points[index] = Point(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_1:
+                    index = 0
+                elif event.key == pygame.K_2:
+                    index = 1
+
+        new_paths = get_modified_paths_vector(rect, path, Vector(path.points[0], path.points[1]))
         draw_rect(rect, surf, (255, 255, 255))
         draw_path(path, surf, (0, 0, 0))
-
         draw_paths(new_paths, surf)
 
+        pygame.display.update()
+        clock.tick(200)
+        pygame.display.set_caption("CovSim    FPS: " + str(clock.get_fps()))
 
-test_modified_path_vectors()
+
+random_shape_path_test()

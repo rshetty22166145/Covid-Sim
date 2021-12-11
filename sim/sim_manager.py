@@ -1,5 +1,45 @@
+from __future__ import annotations
 from enum import IntEnum
+import random
 from sim.sim_components import *
+from sim.city_generator import *
+from dataclasses import dataclass
+from geometry.geometry import Point, Rectangle
+
+
+@dataclass
+class SimParams:
+    """Parameters for simulation
+
+    Instance Attributes:
+        - block_dim: the width and height of a city block
+    """
+    city_blocks_x: int
+    city_blocks_y: int
+    block_dim: float  # Measures in sim world distance units (DU), where (10 DU = 1 meter)
+    buildings_constant: int  # A larger value increases building density per block
+    road_width: float
+
+    high_rise_percentage: float  # Number of buildings which have many floors
+
+    num_medical_buildings: int
+    num_travel_buildings: int
+
+    # Summed up and converted into percentages:
+    residential_ratio: float
+    commercial_ratio: float
+    industrial_ratio: float
+
+    population: int
+    avg_age: int
+    mask_wearing_percentage: float
+    average_travels_per_year: int
+    is_closed_border: bool
+    initial_vaccination_percentage: float
+    vaccination_tendency: float  # TODO: Exact measure TBD
+    is_vaccine_available: bool
+    social_distancing: float  # TODO: Exact measure TBD
+    homelessness_percentage: float
 
 
 # Keeps track of graphics data
@@ -37,7 +77,11 @@ class GraphicsData:
 
 
 class SimManager:
-    def __init__(self):
+    """"""
+    # Proportion of main road_width that local roads should be
+    LOCAL_ROAD_MULTIPLIER = 0.5
+
+    def __init__(self, sim_params: SimParams):
         self.__graphics_data = GraphicsData()
 
         # DEBUG: Creates arbitrary building, object, and people graphical data
@@ -46,10 +90,7 @@ class SimManager:
         self.__graphics_data.people = [tuple(i for _ in range(5)) for i in range(40, 50)]
 
         # Generate city
-        self.city = self.generate_city()
-
-    def generate_city(self) -> City:
-        """"""
+        self.city = City(self, generate_city_buildings(sim_params), )
 
     def progress_simulation(self, time_delta_ms: int) -> dict:
         """
