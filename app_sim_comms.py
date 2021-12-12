@@ -2,7 +2,7 @@ import pygame
 import logging
 from multiprocessing import Process, Pipe
 from threading import Thread, Lock
-from sim_manager import SimManager
+from sim.sim_manager import SimManager
 from typing import Optional
 from my_queue import Queue
 import copy

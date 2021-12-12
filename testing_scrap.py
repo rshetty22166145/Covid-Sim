@@ -5,9 +5,10 @@ from geometry.geometry import *
 import colorsys
 import random
 from sim.city_generator import get_city_rectangle_layout
+from sim.sim_manager import SimManager, SimParams
 pygame.init()
 
-SCREEN_SIZE = (720, 720)
+SCREEN_SIZE = (750, 750)
 
 
 @contextmanager
@@ -69,15 +70,6 @@ def color_brewer(num: int) -> list[tuple[int, ...]]:
 def random_shape_path_test():
     rects = []
 
-    # for _ in range(25):
-    #     left = random.randint(20, SCREEN_SIZE[0] - 20)
-    #     top = random.randint(20, SCREEN_SIZE[1] - 20)
-    #     width = random.randint(0, SCREEN_SIZE[0] - left)
-    #     height = random.randint(0, SCREEN_SIZE[1] - top)
-    #     width = 20
-    #     height = 20
-    #     rects.append(Rectangle(left=left, top=top, width=width, height=height))
-
     for x in range(10):
         for y in range(10):
             width = 20
@@ -89,7 +81,8 @@ def random_shape_path_test():
 
             rects.append(Rectangle(left=left, top=top, width=width, height=height))
 
-    rects = get_city_rectangle_layout(4, 4, 100, 40, 100)
+    road_width = 40
+    rects, smallest_road_radius = get_city_rectangle_layout(5, 5, 100, road_width, 100)
 
     shapes = rects
 
@@ -116,7 +109,8 @@ def random_shape_path_test():
                 elif event.key == pygame.K_2:
                     index = 1
 
-        paths, is_endpt_blocked = get_paths(shapes, path_vector, person_radius=0, max_paths=10)
+        paths, is_endpt_blocked = get_paths(shapes, path_vector, inflation_radius=smallest_road_radius / 4,
+                                            max_paths=10, is_random=True)
 
         for rect in rects:
             draw_rect(rect, surf, (255, 255, 255))
@@ -173,7 +167,7 @@ def test_modified_path_points():
 
 
 def test_city_layout():
-    buildings = SimManager.generate_city(4, 4, 100, 70, 100)
+    buildings = get_city_rectangle_layout(4, 4, 100, 70, 100)[0]
 
     with draw_stuff() as surf:
         for rect in buildings:
@@ -214,4 +208,69 @@ def test_modified_path_vectors():
         pygame.display.set_caption("CovSim    FPS: " + str(clock.get_fps()))
 
 
-random_shape_path_test()
+def synchronous_sim_test():
+    """Run the simulation with graphics on same process to build and debug the system"""
+    surf = pygame.display.set_mode(SCREEN_SIZE)
+    clock = pygame.time.Clock()
+
+    sim = SimManager(SimParams(
+        city_blocks_x=4,
+        city_blocks_y=4,
+        block_dim=150,
+        buildings_constant=100,
+        road_width=40,
+        high_rise_percentage=50,
+        num_medical_buildings=1,
+        num_travel_buildings=1,
+        residential_ratio=2,
+        commercial_ratio=1,
+        industrial_ratio=1,
+        population=10,
+        avg_age=40,
+        mask_wearing_percentage=60,
+        average_travels_per_year=10,
+        is_closed_border=False,
+        initial_vaccination_percentage=30,
+        initial_infection_percentage=10,
+        is_vaccine_available=True,
+        homelessness_percentage=6,
+        quarantine_tendency=-1,
+        vaccination_tendency=-1,
+        social_distancing=-1,
+        world_threat_level_international=-1,
+        world_threat_level_local=-1
+    ))
+    sim_speed_ms = 5000
+
+    running = True
+    while running:
+        surf.fill((70, 70, 70))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    pass
+                elif event.key == pygame.K_DOWN:
+                    pass
+
+        events, frame_info = sim.progress_simulation(sim_speed_ms)
+
+        for b in sim.city.buildings:
+            draw_rect(b.rect, surf, (255, 255, 255))
+            draw_circle(Circle(b.entrance_point.x, b.entrance_point.y, 7), surf, (255, 255, 255))
+
+        for p in sim.city.people:
+            if p.location.point is not None:
+                pt = p.location.point
+                draw_circle(Circle(pt.x, pt.y, 4), surf,
+                            (255, 0, 0) if p.is_infected else (0, 255, 0), width=0)
+        draw_paths([p.current_path for p in sim.city.people], surf)
+
+        pygame.display.update()
+        clock.tick(200)
+        pygame.display.set_caption("CovSim    FPS: " + str(clock.get_fps()))
+
+
+synchronous_sim_test()

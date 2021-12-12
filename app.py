@@ -2,7 +2,7 @@ import pygame
 import logging
 import time
 import math
-from sim_manager import GraphicsData
+from sim.sim_manager import GraphicsData
 from app_gui import AppGui
 from app_sim_comms import AppSimComms
 from my_pygame_components.rectangle import RectangleComponent

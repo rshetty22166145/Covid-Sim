@@ -1,25 +1,46 @@
 from __future__ import annotations
 from geometry.geometry import *
 from geometry.helpers import dist
+import random
 
 
 def get_paths(rects: list[Rectangle],
               vector: Vector,
-              person_radius: float = 0.0,
-              max_paths=None) -> tuple[list[Path], bool]:
+              inflation_radius: float = 0.0,
+              max_paths=None,
+              is_random=False) -> tuple[list[Path], bool]:
     """
     Return a set of paths, each of which leads from the starting point
-    of vector to its end point without intersecting any rectangles
+    of vector to its end point without intersecting any rectangles. Also return
+    a boolean indicating whether the endpoint of the path is inside a rect
 
-    Possible Optimizations:
+    Possible Optimizations/Improvements:
         - Instead of getting all the intersecting shapes each time, get the first one the comes up,
         that is, alter this in the get_intersecting_shapes func. This will sacrifice largest shape sorting
+        - Check for overlapping shapes and merge them into 1 before the path finding recursion starts.
+        Cache shape lists each frame with clear_cache ability in a dict for different social distancing
+        values to save processing
+
+    :param rects: Rectangle shapes of objects to avoid
+    :param vector: Desired start and end points via a vector
+    :param inflation_radius: Inflates all rectangles by the given value
+    :param is_random: Should a random path be chosen each time (best performance)
+    :param max_paths: Stop executing after this many paths have been found (better performance)
     """
     # TODO: Rectangle vector collision breaks if vector crosses diagonally through vertices!!! FiXX!!
+    # TODO: Consider optimizations above
 
     # Inflate rectangles by person radius so person doesn't collide with shapes
-    if person_radius != 0:
-        rects = [r.get_inflated(person_radius) for r in rects]
+    if inflation_radius != 0:
+        # Do not inflate if start or endpt is in this rect
+        new_rects = []
+        for r in rects:
+            inflated = r.get_inflated(inflation_radius)
+            if inflated.is_point_inside(vector.start) or inflated.is_point_inside(vector.end):
+                new_rects.append(r)
+            else:
+                new_rects.append(inflated)
+        rects = new_rects
 
     was_endpt_blocked = False
     # Exclude rectangles which consume the start or endpoint.
@@ -67,8 +88,12 @@ def get_paths(rects: list[Rectangle],
                         intersecting_vector = vec
                         break
 
-                for p in get_modified_paths_vector(largest_rect, cur_path, intersecting_vector):
-                    recursive_tree(p)
+                modified_paths = get_modified_paths_vector(largest_rect, cur_path, intersecting_vector)
+                if is_random:
+                    recursive_tree(random.choice(modified_paths))
+                else:
+                    for p in modified_paths:
+                        recursive_tree(p)
 
     # Passes vector as an initial path
     recursive_tree(Path([vector.start, vector.end]))

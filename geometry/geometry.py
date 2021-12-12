@@ -68,6 +68,13 @@ class Vector:
     def __iter__(self):
         return iter((self.start, self.end))
 
+    def __getitem__(self, item):
+        if not isinstance(item, int):
+            raise TypeError("Indexing into a point must be done with integers, not " + str(type(item).__name__))
+        elif item not in (0, 1):
+            raise IndexError("A vector can only be indexed at 0 or 1")
+        return self.start if item == 0 else self.end
+
     def __str__(self):
         return "Vector" + str(tuple(self))
 
@@ -88,6 +95,15 @@ class Vector:
             width=width,
             height=height
         )
+
+    def get_direction(self) -> float:
+        """Return angle in radians where the vector is facing"""
+        return math.atan2(self.end[1] - self.start[0],
+                          self.end[0] - self.start[0])
+
+    def get_magnitude(self) -> float:
+        """Return the length of the vector"""
+        return dist(self.start, self.end)
 
 
 class Path:
