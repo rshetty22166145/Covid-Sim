@@ -1,34 +1,40 @@
 from __future__ import annotations
+
+import math
+
 import geometry.geometry as g
-from typing import Union
+from typing import Union, Sequence
 import random
 
 SECONDS_IN_YEAR = 31536000
 
 
-def dist(p, q):
+def dist(p: Union[list, tuple, g.Point], q: Union[list, tuple, g.Point]):
+    """Return the distance between 2 points"""
     return ((q[1] - p[1]) ** 2 + (q[0] - p[0]) ** 2) ** 0.5
 
 
-def ccw(A: g.Point, B: g.Point, C: g.Point) -> bool:
-    """Checks intersection of three points by cases"""
-    return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x)
+def ccw(a: g.Point, b: g.Point, c: g.Point) -> bool:
+    """Return if the points a,b,c are arranged in counterclockwise order"""
+    return (c.y - a.y) * (b.x - a.x) > (b.y - a.y) * (c.x - a.x)
 
 
 def midpoint(vector: g.Vector) -> g.Point:
-    """Returns midpoint of vector"""
+    """Return midpoint of vector"""
     return vector.start + ((vector.end - vector.start) / 2)
 
 
-def intersect_points(A: g.Point, B: g.Point, C: g.Point, D: g.Point) -> bool:
-    """Checks Instersection of segment AB and CD"""
-    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
+def intersect_points(a: g.Point, b: g.Point, c: g.Point, d: g.Point) -> bool:
+    """Return if segments formed by points AB and CD are intersecting"""
+    return ccw(a, c, d) != ccw(b, c, d) and ccw(a, b, c) != ccw(a, b, d)
 
 
 def are_vectors_intersecting(vector1: g.Vector, vector2: g.Vector) -> bool:
     """Return whether vectors intersect"""
     # Calling 4 times with shuffled parameters is necessary since the algorithm is
-    # inconsistent depending on input order.
+    # inconsistent depending on input order. This ensures that the segments are not
+    # considered to be colliding if they touch at endpoints, or if they are collinear and
+    # overlapping
     return intersect_points(vector1.start, vector1.end, vector2.start, vector2.end) and \
         intersect_points(vector1.end, vector1.start, vector2.start, vector2.end) and \
         intersect_points(vector1.start, vector1.end, vector2.end, vector2.start) and \

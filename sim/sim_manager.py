@@ -130,7 +130,7 @@ class SimManager:
         Preconditions:
             - time_delta_s > 0
         """
-        self.city.time_s += time_delta_s
+        self.city.progress_time(time_delta_s)
 
         return self.__graphics_data.get_dynamic_sendable_info()
 

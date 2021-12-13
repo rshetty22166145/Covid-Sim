@@ -6,7 +6,13 @@ import colorsys
 import random
 from sim.city_generator import get_city_rectangle_layout
 from sim.sim_manager import SimManager, SimParams
+import logging
+import datetime
 pygame.init()
+
+logging.basicConfig(filename='./logs/CovSim' +
+                             str(datetime.datetime.now().date()) + '.log',
+                    level=logging.DEBUG)
 
 SCREEN_SIZE = (750, 750)
 
@@ -25,10 +31,10 @@ def draw_stuff(w=SCREEN_SIZE[0], h=SCREEN_SIZE[1]):
     pygame.event.wait()
 
 
-def draw_paths(paths: list[Path], screen: pygame.Surface):
+def draw_paths(paths: list[Path], screen: pygame.Surface, circle=True):
     cols = color_brewer(len(paths))
     for i in range(len(paths)):
-        draw_path(paths[i], screen, cols[i])
+        draw_path(paths[i], screen, cols[i], circle-circle)
 
 
 def draw_rect(rectangle: Rectangle, screen: pygame.Surface, color: tuple[int, int, int], width=1):
@@ -41,14 +47,15 @@ def draw_circle(circle: Circle, screen: pygame.Surface, color: tuple[int, int, i
     pygame.draw.circle(screen, color, (circle.center_x, circle.center_y), circle.radius, width=width)
 
 
-def draw_path(path: Path, screen: pygame.Surface, color: tuple[int, int, int]):
+def draw_path(path: Path, screen: pygame.Surface, color: tuple[int, int, int], circle=True):
     vecs = path.get_vectors()
 
     for vec in vecs:
         draw_vector(vec, screen, color)
 
     # Draws circle at start of path
-    draw_circle(Circle(center_x=vecs[0].start.x, center_y=vecs[0].start.y, radius=3), screen, color, width=0)
+    if circle:
+        draw_circle(Circle(center_x=vecs[0].start.x, center_y=vecs[0].start.y, radius=3), screen, color, width=0)
 
 
 def draw_vector(vector: Vector, screen: pygame.Surface, color: tuple[int, int, int],
@@ -241,6 +248,8 @@ def synchronous_sim_test():
         world_threat_level_local=-1
     ))
     sim_speed_ms = 5000
+    for p in sim.city.people:
+        logging.info(str(p))
 
     running = True
     while running:
@@ -266,7 +275,7 @@ def synchronous_sim_test():
                 pt = p.location.point
                 draw_circle(Circle(pt.x, pt.y, 4), surf,
                             (255, 0, 0) if p.is_infected else (0, 255, 0), width=0)
-        draw_paths([p.current_path for p in sim.city.people], surf)
+        draw_paths([p.current_path for p in sim.city.people], surf, circle=False)
 
         pygame.display.update()
         clock.tick(200)

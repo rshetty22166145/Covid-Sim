@@ -5,7 +5,7 @@ from enum import IntEnum
 from geometry.geometry import *
 from geometry.helpers import SECONDS_IN_YEAR
 from geometry.path_finding import get_paths
-from sim.sim_manager import SimManager
+from sim.sim_manager import *
 import random
 
 
@@ -57,8 +57,24 @@ class Person:
         self.temp = 50
         self.clothing = 10
 
+        self.is_male = random.choice((True, False))
+
         # All attributes below are generated after initialization
         self.location: Optional[Location] = None
+
+        self.home: Optional[Building] = None
+        self.work: Optional[Building] = None
+
+        # TODO: Re-read handout
+
+        # TODO: Implement people action queue
+        # TODO: Add vaccination and previous infection to infection model
+        # TODO: Implement infection model
+        # TODO: Implement season model
+        # TODO: Add menu (console)
+        # TODO: Add Rohit's stats comparison
+
+        # TODO: Meet with Jannate at 6:00 PM ishhh
 
         # All attributes below are used to track decision-making
         self.current_path = None
@@ -71,6 +87,18 @@ class Person:
         self.location = location
         self.current_path, is_endpt_blocked = self.sim.city.path_find(self.location.point,
                                                                       self.sim.city.get_random_building().entrance_point)
+
+    def __str__(self):
+        return "Person" + str({
+            "is_infected": self.is_infected,
+            "is_vaccinated": self.is_vaccinated,
+            "is_homeless": self.is_homeless,
+            "age": self.age,
+            "mask_wearing": self.mask_wearing_percentage
+        })
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Building:
@@ -128,6 +156,18 @@ class City:
         self.is_vaccine_available = is_vaccine_available
 
         self.time_s = 0
+
+    def progress_time(self, time_delta_s: int):
+        """
+        Move the simulation time ahead by time_delta_s
+
+        Preconditions:
+            - time_delta_s > 0
+        """
+        self.time_s += time_delta_s
+
+        for p in self.people:
+            p.act(time_delta_s)
 
     def finalize_people(self):
         """Generates the remaining attributes of people"""
