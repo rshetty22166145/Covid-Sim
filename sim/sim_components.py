@@ -212,7 +212,7 @@ class City:
         for p in self.people:
             # The gods have been merciful, world hunger is temporarily solved
             # p.change_hunger(models.hunger_change_per_second())
-            p.change_temperature(models.temperature_change_per_second(self.get_season(),
+            p.change_temperature(models.temperature_change_per_second(self.get_season().value,
                                                                       p.get_temperature(),
                                                                       p.clothing))
             p.act(time_delta_s)

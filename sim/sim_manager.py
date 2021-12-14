@@ -35,7 +35,7 @@ def write_to_csv(filename: str, row: list) -> None:
     if not exists('../simdata/' + filename + '.csv'):
         is_exist = False
 
-    f = open('../simdata/' + filename + '.csv', 'w')
+    f = open('./simdata/' + filename + '.csv', 'w')
 
     # create the csv writer
     writer = csv.writer(f)

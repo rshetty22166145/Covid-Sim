@@ -42,7 +42,7 @@ def hunger_change_per_second() -> float:
     return -0.0023
 
 
-def temperature_change_per_second(season: City.Seasons, cur_temp: float, clothing: float) -> float:
+def temperature_change_per_second(season: int, cur_temp: float, clothing: float) -> float:
     """Return the temperature change per second for a person with a current temperature value of
     cur_temp and a clothing value of clothing, with the given season"""
     def clothing_multiplier_mult(clothing_value: float) -> float:
@@ -64,10 +64,10 @@ def temperature_change_per_second(season: City.Seasons, cur_temp: float, clothin
     def spring(temp: float) -> float:
         return summer(temp) * 0.5
 
-    return {City.Seasons.SUMMER: summer,
-            City.Seasons.SPRING: spring,
-            City.Seasons.FALL: fall,
-            City.Seasons.WINTER: winter}[season](cur_temp) + clothing_multiplier_add(clothing)
+    return {1: summer,
+            0: spring,
+            2: fall,
+            3: winter}[season](cur_temp) + clothing_multiplier_add(clothing)
 
 
 def probability_infection_per_sec_at_distance(distance: float, healthy_hunger: float, healthy_temp: float,
