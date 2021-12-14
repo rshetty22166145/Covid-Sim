@@ -28,6 +28,10 @@ def csv_callback(keys1, vals1, keys2, vals2):
 
 
 def simulation_callback(params: dict) -> None:
+
+    #print (params)
+    #return
+
     pygame.init()
 
     """Called by GUI to launch simulation"""
