@@ -21,7 +21,6 @@ import datetime
 
 import pygame
 
-
 def csv_callback(keys1, vals1, keys2, vals2):
     """Called by GUI to output graph comparison visual"""
     #raise InvalidColumnsError("Sample error message!")
@@ -29,6 +28,10 @@ def csv_callback(keys1, vals1, keys2, vals2):
 
 
 def simulation_callback(params: dict) -> None:
+
+    #print (params)
+    #return
+
     pygame.init()
 
     """Called by GUI to launch simulation"""
@@ -46,7 +49,7 @@ logging.basicConfig(filename='./logs/CovSim' +
 logging.info("----------------------------")
 
 if __name__ == "__main__":
-    #g.start_gui(csv_callback, simulation_callback)
+    # g.start_gui(csv_callback, simulation_callback)
 
     simulation_callback({
         "city_blocks_x": 4,

@@ -134,17 +134,6 @@ class SyncApp:
             # Render sim objects
             self.render()
 
-            for b in self._sim.city.buildings:
-                draw_rect(b.rect, self._window, (255, 255, 255))
-                draw_circle(Circle(b.entrance_point.x, b.entrance_point.y, 7), self._window, (255, 255, 255))
-
-            for p in self._sim.city.people:
-                if p.location.point is not None:
-                    pt = p.location.point
-                    draw_circle(Circle(pt.x, pt.y, 4), self._window,
-                                (255, 0, 0) if p.is_infected else (0, 255, 0), width=0)
-            draw_paths([p.current_path for p in self._sim.city.people], self._window, start_circle=False)
-
             pygame.display.update()
             self._clock.tick(100)
             pygame.display.set_caption("CovSim    FPS: " + str(self._clock.get_fps()))
@@ -156,6 +145,7 @@ class SyncApp:
         ratio = self.WINDOW_DIMS[0] / cam_rect.width
 
         self.render_buildings(ratio, cam_rect)
+        self.render_people(ratio, cam_rect)
 
     def render_buildings(self, ratio: float, cam_rect: pygame.Rect) -> None:
         """Renders buildings using camera"""
@@ -169,15 +159,15 @@ class SyncApp:
                                          b_pyrect.height * ratio))
 
                 pygame.draw.rect(self._window, (180, 180, 200), blit_rect)
-                ent_pt = SyncApp.get_relative_pos(b.entrance_point, )
-                draw_circle(Circle(b.entrance_point.x, b.entrance_point.y, 7), self._window, (255, 255, 255))
+                ent_pt = SyncApp.get_relative_pos(b.entrance_point, ratio, cam_rect)
+                draw_circle(Circle(ent_pt[0], ent_pt[1], 7 * ratio), self._window, (255, 255, 255))
 
     def render_people(self, ratio: float, cam_rect: pygame.Rect) -> None:
         """Renders people using camera"""
         for p in self._sim.city.people:
             if p.location.point is not None and cam_rect.collidepoint(p.location.point.x, p.location.point.y):
-                pt = p.location.point
-                draw_circle(Circle(pt.x, pt.y, 4), self._window,
+                pt = SyncApp.get_relative_pos(p.location.point, ratio, cam_rect)
+                draw_circle(Circle(pt[0], pt[1], 4 * ratio), self._window,
                             (255, 0, 0) if p.is_infected else (0, 255, 0), width=0)
 
     @staticmethod

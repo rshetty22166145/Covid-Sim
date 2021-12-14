@@ -72,6 +72,8 @@ class Person:
         self.mask_wearing_percentage = mask_wear_percent
         self.travels_per_s = travels_per_year / SECONDS_IN_YEAR
 
+        self.is_wearing_mask = models.roll_probability(mask_wear_percent / 100)
+
         self._hunger = random.randint(50, 100)
         self.happiness = random.randint(0, 100)
         self._temp = 50
@@ -95,6 +97,38 @@ class Person:
 
     def act(self, time_delta_s) -> None:
         """Run the person's core action/decision-making process over the given time delta"""
+        # TODO: Make this algorithm precisely move along the path, currently it can move along
+        #  at most one vector of the path during a single call
+        old_pos = Point(self.location.point.x, self.location.point.y)
+
+        d = self.speed_DU_s * time_delta_s
+        first_vec_length = dist(self.current_path.points[0], self.current_path.points[1])
+
+        self.last_movement = Path([self.location.point, self.location.point])
+        if first_vec_length <= d:
+            if self.sim.city.move(self,
+                                  self.current_path.points[1].x - self.location.point.x,
+                                  self.current_path.points[1].y - self.location.point.y):
+
+                # Updates path from new location
+                self.current_path = Path([self.location.point] + self.current_path.points[2:])
+
+                self.last_movement = Path([old_pos, self.location.point])
+
+                # If path finished, make new
+                if len(self.current_path.points) <= 1:
+                    self.current_path, is_endpt_blocked = self.sim.city.path_find(
+                        self.location.point,
+                        self.sim.city.get_random_building().entrance_point
+                    )
+        else:
+            if self.sim.city.move(self,
+                                  (d / first_vec_length) * (self.current_path.points[1].x - self.current_path.points[0].x),
+                                  (d / first_vec_length) * (self.current_path.points[1].y - self.current_path.points[0].y)):
+                # Updates path from new location
+                self.current_path = Path([self.location.point] + self.current_path.points[1:])
+
+                self.last_movement = Path([old_pos, self.location.point])
 
     def finalize(self, location) -> None:
         """Assigns attributes that have not been assigned upon initialization"""
@@ -125,6 +159,10 @@ class Person:
     def get_temperature(self):
         """Return person's temperature"""
         return self._temp
+
+    def get_hunger(self):
+        """Return person's hunger"""
+        return self._hunger
 
     def __str__(self):
         return "Person" + str({
@@ -216,6 +254,17 @@ class City:
                                                                       p.get_temperature(),
                                                                       p.clothing))
             p.act(time_delta_s)
+
+        for p1 in self.people:
+            if p1.is_infected:
+                for p2 in self.people:
+                    if not p2.is_infected:
+                        prob = models.probability_infected_from_paths(p1.last_movement, p2.last_movement, time_delta_s,
+                                                                      p2.get_hunger(), p2.get_temperature(),
+                                                                      p2.is_wearing_mask, p1.is_wearing_mask,
+                                                                      p1.was_infected, p1.is_vaccinated)
+                        if round(prob, 4) != 0 and models.roll_probability(round(prob, 4)):
+                            p1.is_infected = True
 
     def finalize_people(self):
         """Generates the remaining attributes of people"""

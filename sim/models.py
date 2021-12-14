@@ -119,7 +119,6 @@ def probability_infected_from_paths(path1: Path, path2: Path, delta_time_s: floa
                  sum(dist(v.start, v.end) for v in path2.get_vectors())]
 
     speeds = [d / delta_time_s for d in distances]
-    print(speeds)
 
     times_1 = []
     times_2 = []

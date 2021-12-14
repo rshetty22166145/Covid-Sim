@@ -333,7 +333,13 @@ def build_app(
                 if (__validate_field(widget[IDX_WIDGET_CONTROL],
                                      (widget[IDX_WIDGET_OPTION])[IDX_OPTION_VALIDATOR_LAMBDA],
                                      (widget[IDX_WIDGET_OPTION])[IDX_OPTION_TYPE])):
-                    valdict[key] = widget[IDX_WIDGET_CONTROL].value
+
+                    if (widget[IDX_WIDGET_OPTION])[IDX_OPTION_TYPE] is bool:
+                        actual_value = widget[IDX_WIDGET_CONTROL].value
+                    else:
+                        actual_value = ((widget[IDX_WIDGET_OPTION])[IDX_OPTION_TYPE])(widget[IDX_WIDGET_CONTROL].value)
+
+                    valdict[key] = actual_value #widget[IDX_WIDGET_CONTROL].value
 
         def _validate_all_fields() -> list[bool]:
             """Return validation results for each field"""

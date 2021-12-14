@@ -5,3 +5,4 @@ __pycache__/
 logs
 datasets
 simdata
+savedmodels.dat
