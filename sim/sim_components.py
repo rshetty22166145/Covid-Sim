@@ -25,6 +25,7 @@ from sim.sim_manager import *
 import sim.models as models
 import datetime
 import random
+import logging
 
 
 class Person:
@@ -88,8 +89,6 @@ class Person:
 
         # TODO: Implement people action queue
 
-        # TODO: Meet with Jannate at 6:00 PM ishhh
-
         # All attributes below are used to track decision-making
         self.last_movement: Optional[Path] = None
         self.current_path: Optional[Path] = None
@@ -110,6 +109,7 @@ class Person:
         if self._hunger <= -100:
             self.is_dead = True
             self.cause_of_death = Person.CausesOfDeath.STARVATION
+            logging.info("Person has died of starvation")
         self._hunger = min(self._hunger, 120)
 
     def change_temperature(self, temp_delta: float) -> None:
@@ -119,6 +119,7 @@ class Person:
         if self._temp <= -100:
             self.is_dead = True
             self.cause_of_death = Person.CausesOfDeath.COLD
+            logging.info("Person has died of cold")
         self._temp = min(self._hunger, 150)
 
     def get_temperature(self):
@@ -209,7 +210,8 @@ class City:
 
         # Activates people's brain cells, and makes them realize cold and hunger mwahahaha
         for p in self.people:
-            p.change_hunger(models.hunger_change_per_second())
+            # The gods have been merciful, world hunger is temporarily solved
+            # p.change_hunger(models.hunger_change_per_second())
             p.change_temperature(models.temperature_change_per_second(self.get_season(),
                                                                       p.get_temperature(),
                                                                       p.clothing))

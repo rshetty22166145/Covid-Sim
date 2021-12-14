@@ -23,6 +23,32 @@ import sim.sim_components as sc
 import sim.city_generator as city_gen
 from dataclasses import dataclass
 from geometry.geometry import Point, Rectangle
+import csv
+from os.path import exists
+
+
+def write_to_csv(filename: str, row: list) -> None:
+    """Adds a row to a specified csv file. File name is the name of the csv, without .csv,
+    and without a path. The path will be automatically set to simdata folder"""
+    # open the file in the write mode
+    is_exist = True
+    if not exists('../simdata/' + filename + '.csv'):
+        is_exist = False
+
+    f = open('../simdata/' + filename + '.csv', 'w')
+
+    # create the csv writer
+    writer = csv.writer(f)
+
+    # Adds headers if new file
+    if not is_exist:
+        writer.writerow(['day_number', 'population', 'cases_since_last'])
+
+    # write a row to the csv file
+    writer.writerow(row)
+
+    # close the file
+    f.close()
 
 
 @dataclass
@@ -145,7 +171,10 @@ class SimManager:
                             sim_params.is_vaccine_available)
         self.city.finalize_people()
 
-    def progress_simulation(self, time_delta_s: int) -> dict:
+        # Creates random value so files for each sim are unique
+        self.sim_file_id = random.randint(10000, 99999)
+
+    def progress_simulation(self, time_delta_s: int):  # -> dict:
         """
         Progress the simulation world by the provided time_delta_s in simulation
         world time measurement
@@ -153,9 +182,13 @@ class SimManager:
         Preconditions:
             - time_delta_s > 0
         """
+        # Progresses simulation
         self.city.progress_time(time_delta_s)
 
-        return self.__graphics_data.get_dynamic_sendable_info()
+        # Records csv data
+        write_to_csv('sim' + str(self.sim_file_id), [])
+
+        # return self.__graphics_data.get_dynamic_sendable_info()
 
     def get_static_graphics_data(self) -> dict:
         """

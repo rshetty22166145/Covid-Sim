@@ -94,6 +94,7 @@ class SyncApp:
     def parse_params(self, param_dict: dict) -> SimParams:
         """Takes the parameter dict passed in from the GUI and converts
         it to a SimParams object directly passable into the SimManager initializer"""
+        return SimParams(**param_dict)
 
     def start(self):
         """Start main app loop"""
@@ -108,15 +109,30 @@ class SyncApp:
         while self._is_running:
             self._window.fill((70, 70, 70))
 
+            # Progresses simulation
+            self._sim.progress_simulation(self._sim_speed_s)
+
             # Stores events, captures quit event
             self._events = pygame.event.get()
             for event in self._events:
                 if event.type == pygame.QUIT:
                     self.stop()
+                # Camera zoom feature
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.scroll_manager(event)
 
-            self._sim.progress_simulation(self._sim_speed_s)
+            # camera movement
+            if pygame.key.get_pressed()[pygame.K_RIGHT]:
+                self._camera.topleft[0] += 5.0
+            if pygame.key.get_pressed()[pygame.K_LEFT]:
+                self._camera.topleft[0] -= 5.0
+            if pygame.key.get_pressed()[pygame.K_DOWN]:
+                self._camera.topleft[1] += 5.0
+            if pygame.key.get_pressed()[pygame.K_UP]:
+                self._camera.topleft[1] -= 5.0
+
+            # Render sim objects
+            self.render()
 
             for b in self._sim.city.buildings:
                 draw_rect(b.rect, self._window, (255, 255, 255))
@@ -139,28 +155,28 @@ class SyncApp:
                                                       self._camera.width * self._camera.height_frac))
         ratio = self.WINDOW_DIMS[0] / cam_rect.width
 
-        for b in self.city.buildings:
-            if cam_rect.colliderect(b.rect):
-                scaled_b_topleft = (b.rect.topleft[0] * ratio,
-                                    b.rect.topleft[1] * ratio)
-                scaled_cam_topleft = (cam_rect.topleft[0] * ratio,
-                                      cam_rect.topleft[1] * ratio)
-                relative_b_topleft = (scaled_b_topleft[0] - scaled_cam_topleft[0],
-                                      scaled_b_topleft[1] - scaled_cam_topleft[1])
+        self.render_buildings(ratio, cam_rect)
 
-                blit_rect = pygame.Rect(relative_b_topleft, (b.rect.width * ratio, b.rect.height * ratio))
+    def render_buildings(self, ratio: float, cam_rect: pygame.Rect):
+        """Renders buildings using camera"""
+        for b in self._sim.city.buildings:
+            # Building pygame rectangle
+            b_pyrect = b.rect.get_pygame_rectangle()
+
+            if cam_rect.colliderect(b_pyrect):
+                blit_rect = pygame.Rect(SyncApp.get_relative_pos(b_pyrect.topleft, ratio, cam_rect),
+                                        (b_pyrect.width * ratio,
+                                         b_pyrect.height * ratio))
 
                 pygame.draw.rect(self._window, (0, 200, 150), blit_rect)
 
-    def get_relative_topleft(
-            self, world_pos: Union[tuple[float, float], list, Point]
+    @staticmethod
+    def get_relative_pos(
+            world_pos: Union[tuple[float, float], list, Point],
+            ratio: float, cam_rect: pygame.Rect
     ) -> tuple[int, int]:
         """Given a sim world position, find the position in pixels relative to the topleft
         of the window"""
-        cam_rect = pygame.Rect(self._camera.topleft, (self._camera.width,
-                                                      self._camera.width * self._camera.height_frac))
-        ratio = self.WINDOW_DIMS[0] / cam_rect.width
-
         scaled_pos = (world_pos[0] * ratio,
                       world_pos[1] * ratio)
         scaled_cam_topleft = (cam_rect.topleft[0] * ratio,
@@ -168,9 +184,6 @@ class SyncApp:
         relative_pos = (int(scaled_pos[0] - scaled_cam_topleft[0]),
                         int(scaled_pos[1] - scaled_cam_topleft[1]))
         return relative_pos
-
-    def render_buildings(self):
-        """Renders buildings using camera"""
 
     def scroll_manager(self, mouse_event):
         e = mouse_event

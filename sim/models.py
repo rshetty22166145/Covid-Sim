@@ -15,11 +15,12 @@ using this code in any other way is prohibited.
 
 This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
 """
+from __future__ import annotations
 import random
 import math
 from geometry.helpers import *
-from geometry.geometry import Vector, Path, Point
-from sim.sim_components import City
+from geometry.geometry import *
+from sim.sim_components import *
 
 
 def roll_probability(prob: float) -> bool:
