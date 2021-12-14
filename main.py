@@ -14,6 +14,7 @@ using this code in any other way is prohibited.
 
 This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
 """
+from plotting.comparisons import comparison_graph
 from sync_app import SyncApp
 import go as g
 import logging
@@ -21,20 +22,25 @@ import datetime
 
 import pygame
 
-def csv_callback(keys1, vals1, keys2, vals2):
+def csv_callback(file1_values: dict[float, float], file2_values: dict[float, float]):
     """Called by GUI to output graph comparison visual"""
     #raise InvalidColumnsError("Sample error message!")
-    print("KEYS 1: ", keys1, "\r\nVALUES 1: ", vals1, "\r\n", "KEYS 2: ", keys2, "\r\nVALUES 2: ", vals2, "\r\n")
+    # print("FILE 1: ", file1_values, "\r\nFILE 2: ", file2_values, "\r\n")
+
+    if file1_values is not None and len(file1_values) > 0:
+        comparison_graph(file1_values, "./datasets/toronto_data.csv")
+    else:
+        raise g.InvalidColumnsError("Cannot plot empty values")
 
 
 def simulation_callback(params: dict) -> None:
+    """Called by GUI to launch simulation"""
 
     #print (params)
     #return
 
     pygame.init()
 
-    """Called by GUI to launch simulation"""
     # Create App
     app = SyncApp(params)
 

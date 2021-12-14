@@ -4,12 +4,15 @@ import numpy as np
 import csv
 
 
-def comparison_graph(points_dict: dict[float, float]):
+def comparison_graph(points_dict: dict[float, float], toronto_csv_path: str):
     """points_dict contains day values as keys and case proportions as values.
     (ie: 3: 0.3 means 3 days in, 30% of pop were infected"""
 
     # data wrangling
-    df = pd.read_csv('../datasets/toronto_data.csv')
+    if toronto_csv_path is None or toronto_csv_path == "":
+        toronto_csv_path = '../datasets/toronto_data.csv'
+
+    df = pd.read_csv(toronto_csv_path)
     df['cases_oct12'] = df['outbreak_cases_oct12'] + df['cases_60+_oct12'] + df['cases_50+_oct12'] + df[
         'cases_less_than_50_oct12'] + df['hospitalized_cases_oct12'] + df['MALE_cases_oct12'] + df['FEMALE_cases_oct12']
     df["date"] = 0
@@ -72,4 +75,4 @@ def comparison_graph(points_dict: dict[float, float]):
     fig.show()
 
 
-comparison_graph({1: 0.05, 2: 0.02, 3: 0.06, 4: 0.01})
+#comparison_graph({1: 0.05, 2: 0.02, 3: 0.06, 4: 0.01})

@@ -55,13 +55,19 @@ def build_app(
     def m_file_comparison_pane() -> Box:
         """Construct the file chooser pane for csv data comparisons"""
 
-        def _m_get_csv_vals(file: str, col: str) -> list[str]:
+        def _m_get_csv_vals(file: str, col: str) -> list[float]:
             """Get column values in a list from a csv file"""
             ret = []
             with open(file, newline='') as fcsv:
                 for kval in csv.DictReader(fcsv):
                     if kval[col] is not None:
-                        ret.append(kval[col])
+                        try:
+                            ret.append(float(kval[col]))
+                        except ValueError:
+                            if kval[col] == "" or kval[col] == " ":
+                                raise InvalidColumnsError("Empty value in column")
+                            else:
+                                raise InvalidColumnsError("Invalid non-numeric value: " + kval[col])
 
             return ret
 
@@ -199,14 +205,22 @@ def build_app(
 
         def _m_launch_comprison():
             try:
-                launch_csv_comparison_cbfunc(_m_get_csv_vals(file1.value, cols1.value),
-                                             _m_get_csv_vals(file1.value, cols1_1.value),
-                                             None if not FILE2_SUPPORT or file2.value == "" else _m_get_csv_vals(
-                                                 file2.value, cols2.value),
-                                             None if not FILE2_SUPPORT or file2.value == "" else _m_get_csv_vals(
-                                                 file2.value, cols2_1.value))
+                dict1 = dict(zip(_m_get_csv_vals(file1.value, cols1.value), _m_get_csv_vals(file1.value, cols1_1.value)))
+                dict2 = {}
+
+                if FILE2_SUPPORT and file2.value != "":
+                    dict2 = dict(zip(_m_get_csv_vals(file2.value, cols2.value), _m_get_csv_vals(file2.value, cols2_1.value)))
+
+                launch_csv_comparison_cbfunc(dict1, dict2)
+
+                # launch_csv_comparison_cbfunc(_m_get_csv_vals(file1.value, cols1.value),
+                #                              _m_get_csv_vals(file1.value, cols1_1.value),
+                #                              None if not FILE2_SUPPORT or file2.value == "" else _m_get_csv_vals(
+                #                                  file2.value, cols2.value),
+                #                              None if not FILE2_SUPPORT or file2.value == "" else _m_get_csv_vals(
+                #                                  file2.value, cols2_1.value))
             except InvalidColumnsError as e:
-                _m_set_error(e.msg)
+                _m_set_error("ERROR: " + e.msg)
 
         b4 = Box(file_comparison_pane, width="fill")
         cmp_btn = PushButton(b4, text="Run Comparison", enabled=False, command=_m_launch_comprison)
@@ -392,8 +406,10 @@ def build_app(
                 widget[IDX_WIDGET_CONTROL].value = valdict[key]
 
         def _go():
-            global gapp
             """If all is well, then proceed to PHASE 2 of the master evil plan"""
+
+            global gapp
+
             if all(_validate_all_fields()):
                 gapp.destroy()
                 simulation_launch_cbfunc(valdict)
