@@ -1,3 +1,21 @@
+"""CovSim Geometry Package: Path Finding
+
+Module Description
+==================
+This module primarily contains the get_paths function which calculates the path/s
+from a starting point to and ending point while avoiding rectangles. Currently,
+the algorithm is not full proof when rectangles overlap.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
 from geometry.geometry import *
 from geometry.helpers import dist
@@ -219,7 +237,7 @@ def get_modified_paths_point(rect: Rectangle, path: Path, point_index: int) -> l
 def rectangles_intersecting_path(rects: list[Rectangle], path: Path) -> list[Rectangle]:
     """Return all shapes that intersect the given path sorted by size of rectangle bounding box
     in descending order."""
-    # TODO: Make dis func yeet yeet, potential for optimization
+    # TODO: Make this function optimized for checking rectangles colliding with path
 
 
 def rectangles_intersecting_vector(rects: list[Rectangle], vector: Vector) -> list[Rectangle]:

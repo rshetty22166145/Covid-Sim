@@ -1,8 +1,26 @@
+"""Pygame GUI Package: Text Area
+
+Module Description
+==================
+This module contains the text area component called TypeField. This class needs
+to be rebuilt to be more organized and concise, and also to be adapted to the
+GUI system.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 import pygame
-from component import InteractableComponent
+from component import Component
 
 
-class TypeField(InteractableComponent):
+class TypeField(Component):
     def __init__(self, pos, length, font, image, disable_negative, minimum_value):
         # Draw pos of field
         self.pos = pos

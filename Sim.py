@@ -165,8 +165,6 @@ class Person:
         # location descriptor class, not to be directly modified
         self.location = location
 
-        # TODO: Assert that person's initial location is valid (inside building if inside, not inside building if out)
-
 
 @dataclass
 class Camera:

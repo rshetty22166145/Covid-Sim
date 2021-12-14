@@ -1,6 +1,25 @@
+"""Pygame GUI Package: Component Properties
+
+Module Description
+==================
+This module contains classes which are used to store properties for components.
+The property classes implement inheritance functionality and relative numerical
+proportions to parent container components, allowing children to scale to the
+window or their respective container.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
 from typing import Optional, Any, Callable
-import my_pygame_components.component as comp
+import my_pygame_gui.component as comp
 import logging
 
 

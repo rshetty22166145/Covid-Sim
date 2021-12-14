@@ -1,3 +1,21 @@
+"""CovSim Sim Package: Sim Manager
+
+Module Description
+==================
+This module contains the overhead manager class to run the simulation, along with two
+dataclasses representing graphical data output from the simulation, as well as the
+simulation input parameters to configure the sim.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
 from enum import IntEnum
 import random
@@ -69,32 +87,37 @@ class SimParams:
 
 # Keeps track of graphics data
 class GraphicsData:
-
-    class Types(IntEnum):
-        STATIC = 0
-        DYNAMIC = 1
-        BOTH = 2
     """
-    Attributes:
+    Keeps track of sim data necessary to render sim-related graphics. The dictionaries
+    outputted by the getter methods would be sent over the pipe between the graphics
+    process and the sim process, but this was not fully implemented in time, so
+    this class is unused
+
+    Instance Attributes:
         - buildings: List of building locations (id, top, left, width, height)
         - people: List of people info (id, is_infected, x, y) potentially more later
         - objects: List of interactables, (id, top, left, width, height)
     """
+    class Types(IntEnum):
+        STATIC = 0
+        DYNAMIC = 1
+        BOTH = 2
+
     def __init__(self):
         self.buildings: list[tuple[int, int, int, int, int]] = []
         self.people: list[tuple[int, bool, int, int]] = []
         self.objects: list[tuple[int, int, int, int, int]] = []
     
-    def get_dynamic_sendable_info(self):
+    def get_dynamic_sendable_info(self) -> dict:
         return {"type": GraphicsData.Types.DYNAMIC.value,
                 "people": self.people}
 
-    def get_static_sendable_info(self):
+    def get_static_sendable_info(self) -> dict:
         return {"type": GraphicsData.Types.STATIC.value,
                 "buildings": self.buildings,
                 "objects": self.objects}
 
-    def get_all_sendable_info(self):
+    def get_all_sendable_info(self) -> dict:
         return {"type": GraphicsData.Types.BOTH.value,
                 "buildings": self.buildings,
                 "objects": self.objects,

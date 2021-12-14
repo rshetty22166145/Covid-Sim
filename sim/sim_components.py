@@ -1,3 +1,19 @@
+"""CovSim Sim Package: Sim Components
+
+Module Description
+==================
+This module contains classes representing simulation objects
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
@@ -6,6 +22,8 @@ from geometry.geometry import *
 from geometry.helpers import SECONDS_IN_YEAR
 from geometry.path_finding import get_paths
 from sim.sim_manager import *
+import sim.models as models
+import datetime
 import random
 
 
@@ -44,6 +62,7 @@ class Person:
         self.is_infected = is_infected
         self.is_vaccinated = is_vaccinated
         self.is_homeless = is_homeless
+        self.was_infected = is_infected
 
         self.is_dead = False
         self.cause_of_death = None
@@ -52,12 +71,14 @@ class Person:
         self.mask_wearing_percentage = mask_wear_percent
         self.travels_per_s = travels_per_year / SECONDS_IN_YEAR
 
-        self.hunger = random.randint(50, 100)
+        self._hunger = random.randint(50, 100)
         self.happiness = random.randint(0, 100)
-        self.temp = 50
+        self._temp = 50
         self.clothing = 10
 
         self.is_male = random.choice((True, False))
+
+        self.speed_DU_s = random.randint(50, 80) / 10
 
         # All attributes below are generated after initialization
         self.location: Optional[Location] = None
@@ -65,19 +86,13 @@ class Person:
         self.home: Optional[Building] = None
         self.work: Optional[Building] = None
 
-        # TODO: Re-read handout
-
         # TODO: Implement people action queue
-        # TODO: Add vaccination and previous infection to infection model
-        # TODO: Implement infection model
-        # TODO: Implement season model
-        # TODO: Add menu (console)
-        # TODO: Add Rohit's stats comparison
 
         # TODO: Meet with Jannate at 6:00 PM ishhh
 
         # All attributes below are used to track decision-making
-        self.current_path = None
+        self.last_movement: Optional[Path] = None
+        self.current_path: Optional[Path] = None
 
     def act(self, time_delta_s) -> None:
         """Run the person's core action/decision-making process over the given time delta"""
@@ -87,6 +102,28 @@ class Person:
         self.location = location
         self.current_path, is_endpt_blocked = self.sim.city.path_find(self.location.point,
                                                                       self.sim.city.get_random_building().entrance_point)
+
+    def change_hunger(self, hunger_delta: float) -> None:
+        """Change hunger and execute consequences, if any"""
+        self._hunger += hunger_delta
+        # Need... food.... *dying noises*
+        if self._hunger <= -100:
+            self.is_dead = True
+            self.cause_of_death = Person.CausesOfDeath.STARVATION
+        self._hunger = min(self._hunger, 120)
+
+    def change_temperature(self, temp_delta: float) -> None:
+        """Change temperature and execute consequences, if any"""
+        self._temp += temp_delta
+        # Brrrrr....
+        if self._temp <= -100:
+            self.is_dead = True
+            self.cause_of_death = Person.CausesOfDeath.COLD
+        self._temp = min(self._hunger, 150)
+
+    def get_temperature(self):
+        """Return person's temperature"""
+        return self._temp
 
     def __str__(self):
         return "Person" + str({
@@ -135,7 +172,8 @@ class City:
         - smallest_road_width: width of the narrowest distance between buildings in the city
         - is_border_closed: prevents travel
         - is_vaccine_available: allows vaccination
-        - time_s: total time passed since sim started
+        - time_s: total time passed since sim started.
+        - date_time: tracks date and time in sim
     """
     class Seasons(IntEnum):
         SPRING = 0
@@ -156,6 +194,7 @@ class City:
         self.is_vaccine_available = is_vaccine_available
 
         self.time_s = 0
+        self.date_time = datetime.datetime(year=2021, month=1, day=1, hour=9, minute=0, second=0)
 
     def progress_time(self, time_delta_s: int):
         """
@@ -164,9 +203,16 @@ class City:
         Preconditions:
             - time_delta_s > 0
         """
+        # Moves time forward
         self.time_s += time_delta_s
+        self.date_time += datetime.timedelta(seconds=time_delta_s)
 
+        # Activates people's brain cells, and makes them realize cold and hunger mwahahaha
         for p in self.people:
+            p.change_hunger(models.hunger_change_per_second())
+            p.change_temperature(models.temperature_change_per_second(self.get_season(),
+                                                                      p.get_temperature(),
+                                                                      p.clothing))
             p.act(time_delta_s)
 
     def finalize_people(self):
@@ -230,8 +276,8 @@ class City:
                          width=right - left, height=bottom - top)
 
     def get_season(self) -> City.Seasons:
-        """Gets current season. Seasons may affect immunity. time_s at 0 is the beginning of spring"""
-        return City.Seasons(int((self.time_s // (SECONDS_IN_YEAR / 4)) % 4))
+        """Gets current season. Seasons may affect immunity"""
+        return City.Seasons(int(((self.date_time.month-3) % 12) // 3))
 
     def get_random_building(self) -> Building:
         """Return a random building from buildings"""

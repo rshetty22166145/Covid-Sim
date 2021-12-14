@@ -1,8 +1,25 @@
+"""Pygame GUI Package: Button
+
+Module Description
+==================
+This module contains the button component. The button is not functional
+as it has not yet been adapted to work with the GUI system
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 import pygame
-from component import InteractableComponent
+from component import Component
 
 
-class Button(InteractableComponent):
+class Button(Component):
     def __init__(self, top_left_corner, size, image, box=False, border_color=(0, 0, 0), text_color=(40, 40, 40),
                  fill_color=(255, 255, 255), text="", border_thickness=0, font=None):
         # Position of top left corner of button.

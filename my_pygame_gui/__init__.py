@@ -1,9 +1,12 @@
-"""CovSim Geometry Package
+"""Pygame GUI Package
 
 Package Description
 ==================
-This package contains three modules related to mathematics. See individual
-descriptions
+This package contains classes and components for a GUI framework in pygame. Simply
+have a class inherit from the Gui class in gui and start from there. This package is still
+in a very early stage and there was not enough time before the deadline to make it ready
+for use in the final project, so for submission purposes, we switched to an existing GUI
+package.
 
 Copyright and Usage Information
 ===============================

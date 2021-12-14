@@ -6,6 +6,7 @@ import colorsys
 import random
 from sim.city_generator import get_city_rectangle_layout
 from sim.sim_manager import SimManager, SimParams
+from sim.models import probability_infected_from_paths
 import logging
 import datetime
 pygame.init()
@@ -31,10 +32,10 @@ def draw_stuff(w=SCREEN_SIZE[0], h=SCREEN_SIZE[1]):
     pygame.event.wait()
 
 
-def draw_paths(paths: list[Path], screen: pygame.Surface, circle=True):
+def draw_paths(paths: list[Path], screen: pygame.Surface, start_circle=True, circles=False):
     cols = color_brewer(len(paths))
     for i in range(len(paths)):
-        draw_path(paths[i], screen, cols[i], circle-circle)
+        draw_path(paths[i], screen, cols[i], start_circle=start_circle, circles=circles)
 
 
 def draw_rect(rectangle: Rectangle, screen: pygame.Surface, color: tuple[int, int, int], width=1):
@@ -47,14 +48,14 @@ def draw_circle(circle: Circle, screen: pygame.Surface, color: tuple[int, int, i
     pygame.draw.circle(screen, color, (circle.center_x, circle.center_y), circle.radius, width=width)
 
 
-def draw_path(path: Path, screen: pygame.Surface, color: tuple[int, int, int], circle=True):
+def draw_path(path: Path, screen: pygame.Surface, color: tuple[int, int, int], start_circle=True, circles=False):
     vecs = path.get_vectors()
 
     for vec in vecs:
-        draw_vector(vec, screen, color)
+        draw_vector(vec, screen, color, start_circle=(3 if circles else 0))
 
     # Draws circle at start of path
-    if circle:
+    if start_circle:
         draw_circle(Circle(center_x=vecs[0].start.x, center_y=vecs[0].start.y, radius=3), screen, color, width=0)
 
 

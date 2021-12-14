@@ -1,9 +1,24 @@
+"""CovSim Geometry Package: Helpers
+
+Module Description
+==================
+This module contains a few geometric helper functions such as collision detection,
+a few calculus related helpers, and a few other miscellaneous helpers.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
-
 import math
-
 import geometry.geometry as g
-from typing import Union, Sequence
+from typing import Union, Callable
 import random
 
 SECONDS_IN_YEAR = 31536000
@@ -69,6 +84,36 @@ def generate_integers_with_average(lower_bound: int, upper_bound: int, avg: int,
             values[random.choice(tweakable_age_indexes)] += 1
 
     return values
+
+
+def trapezoidal_integral_approximation(n: int, a: float, b: float,
+                                       f: Callable[[float], float]) -> float:
+    """Given n as the number of intervals, estimate the definite integral on the interval a,b
+    using the trapezoidal approximation method"""
+    interval_width = (b-a) / n
+    return (interval_width / 2) * (sum(2 * f(a + i * interval_width) for i in range(1, n)) + f(a) + f(b))
+
+
+def approximated_function_average_on_interval(n: int, a: float, b: float,
+                                              f: Callable[[float], float]) -> float:
+    """Using a trapezoidal approximation of the function integral on interval a,b with n intervals of
+    estimation, return the average value of the function"""
+    return trapezoidal_integral_approximation(n, a, b, f) / (b-a)
+
+
+def distance_func_between_vectors(v1: g.Vector, v2: g.Vector, delta_time_s: float) -> Callable[[float], float]:
+    """Given 2 vectors which represent the motion of 2 objects which occurred over the given
+    delta time interval, return the function of their distance as a function of time over that time
+    interval"""
+    a = v1.start
+    b = v1.end
+    c = v2.start
+    d = v2.end
+    r1 = (b.y - a.y - d.y + c.y) / delta_time_s
+    r2 = a.y - c.y
+    r3 = (b.x - a.x - d.x + c.x) / delta_time_s
+    r4 = a.x - c.x
+    return lambda time: ((r1*time + r2) ** 2 + (r3*time + r4) ** 2) ** 0.5
 
 
 def get_shuffled(lst: list) -> list:

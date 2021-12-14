@@ -1,5 +1,23 @@
+"""Pygame GUI Package: Component
+
+Module Description
+==================
+This module contains the base parent component and container classes. The window
+class is a special container which represents the pygame window where the GUI
+will be housed.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 import pygame
-from my_pygame_components.component_properties import Property, NumericProperty
+from my_pygame_gui.component_properties import Property, NumericProperty
 from typing import Union, Optional, Any
 import logging
 

@@ -1,5 +1,23 @@
-from my_pygame_components.component import Component
-from my_pygame_components.component_properties import Property, NumericProperty
+"""Pygame GUI Package: Rectangle
+
+Module Description
+==================
+This module contains the rectangle component, which creates a
+sample rectangle which can be hovered over to change color. This
+component was used to test the GUI.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
+from my_pygame_gui.component import Component
+from my_pygame_gui.component_properties import Property, NumericProperty
 from typing import Any
 import pygame
 

@@ -1,12 +1,29 @@
+"""App Module
+
+Module Description
+==================
+This module contains the app class which is be the starting point
+of the program
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 import pygame
 import logging
 import time
 import math
 from sim.sim_manager import GraphicsData
-from app_gui import AppGui
 from app_sim_comms import AppSimComms
-from my_pygame_components.rectangle import RectangleComponent
-from my_pygame_components.component_properties import Property, NumericProperty
+from my_pygame_gui.rectangle import RectangleComponent
+from my_pygame_gui.component_properties import Property, NumericProperty
+from my_pygame_gui.gui import Gui
 pygame.init()
 
 # TODO: Adapt button component
@@ -21,13 +38,16 @@ pygame.init()
 # TODO: Implement transitions (with easing?)
 
 
-class App(AppGui):
+class App(Gui):
     """
     Overhead App manager, manages app state, manages GUI displays and visuals
+
+    This App version in the future will be used to run the simulator on a separate
+    process and interact with my_pygame_gui.
     """
 
     def __init__(self):
-        AppGui.__init__(self)
+        Gui.__init__(self)
 
         # Class responsible for managing and communicating with the sim process
         self._sim_communicator = AppSimComms(self)
@@ -38,6 +58,7 @@ class App(AppGui):
         self.count = 0
 
     def initialize(self):
+        """Initialize the app with testing components"""
         self.vanishing_rect = RectangleComponent(
             width=NumericProperty(200),
             height=NumericProperty(50),

@@ -1,3 +1,20 @@
+"""CovSim Geometry Package: Geometry
+
+Module Description
+==================
+This module contains classes representing various geometric objects useful
+for the simulation, namely, Points, Vectors, Paths, Rectangles, and Circles
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 from __future__ import annotations
 import math
 from geometry.helpers import *

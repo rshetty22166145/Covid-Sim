@@ -1,10 +1,27 @@
+"""Pygame GUI Package: GUI Manager
+
+Module Description
+==================
+This module contains the main GUI manager class. Inherit from this to start
+building an app using this GUI framework.
+
+Copyright and Usage Information
+===============================
+
+This file pertains to the CovSim simulation software. The code inside
+this file may be viewed by CSC faculty at University of Toronto. Otherwise,
+this code is only to be used by running the program. Distributing or
+using this code in any other way is prohibited.
+
+This file is Copyright (c) 2021 Aleksey Panas, Rohit Shetty.
+"""
 import pygame
-from my_pygame_components.component import WindowComponent, Container
-from my_pygame_components.component_properties import Property, NumericProperty
+from my_pygame_gui.component import WindowComponent, Container
+from my_pygame_gui.component_properties import Property, NumericProperty
 import logging
 
 
-class AppGui:
+class Gui:
     """Runs the GUI by calling the component tree"""
     # Window size relative to smaller screen resolution dimension (usually height)
     SCREEN_SIZE_CONSTANT = 0.8
@@ -13,7 +30,7 @@ class AppGui:
         # User screen dimensions, and app window dimensions
         self.SCREEN_DIMS = (pygame.display.Info().current_w,
                             pygame.display.Info().current_h)
-        self.WINDOW_DIMS = (int(min(self.SCREEN_DIMS) * AppGui.SCREEN_SIZE_CONSTANT),) * 2
+        self.WINDOW_DIMS = (int(min(self.SCREEN_DIMS) * Gui.SCREEN_SIZE_CONSTANT),) * 2
         logging.info("Window dims are " + str(self.WINDOW_DIMS))
 
         # Pygame tick clock
