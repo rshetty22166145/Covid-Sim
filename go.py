@@ -9,7 +9,7 @@ from typing import Callable, Union
 from sync_app import SyncApp
 
 FILE2_SUPPORT = False
-
+global gapp
 
 class InvalidColumnsError(Exception):
     def __init__(self, msg):
@@ -386,8 +386,10 @@ def build_app(
                 widget[IDX_WIDGET_CONTROL].value = valdict[key]
 
         def _go():
+            global gapp
             """If all is well, then proceed to PHASE 2 of the master evil plan"""
             if all(_validate_all_fields()):
+                gapp.destroy()
                 simulation_launch_cbfunc(valdict)
 
         # Populate fields initially
@@ -455,12 +457,16 @@ def start_gui(data_comparison_callback: Callable, sim_display_callback: Callable
                ("World Thread Level: Local", "world_threat_level_local", float, 0, lambda val: val is not None),
                ("World Thread Level: Int'l", "world_threat_level_international", float, 0, lambda val: val is not None)]
 
-    build_app(
+    global gapp
+    gapp = build_app(
         simulation_parameters=simvars,
         simulation_launch_cbfunc=sim_display_callback,
         validate_csv_file_func=lambda file: str is not None and exists(file) and str(file).lower().endswith("csv"),
         launch_csv_comparison_cbfunc=data_comparison_callback
-    ).display()
+    )
+
+    gapp.display()
+
 
 
 def csv_callback(keys1, vals1, keys2, vals2):
@@ -478,4 +484,4 @@ def simulation_callback(params: dict) -> None:
     #app.start()
 
 
-start_gui(csv_callback, simulation_callback)
+#start_gui(csv_callback, simulation_callback)

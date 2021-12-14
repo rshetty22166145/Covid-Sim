@@ -21,7 +21,7 @@ from geometry.geometry import *
 import logging
 import pygame
 import colorsys
-pygame.init()
+#pygame.init()
 
 
 @dataclass
