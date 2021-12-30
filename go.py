@@ -453,8 +453,8 @@ def build_app(
 
 
 def start_gui(data_comparison_callback: Callable, sim_display_callback: Callable) -> None:
-    simvars = [("City Blocks X", "city_blocks_x", int, 5, lambda val: val is not None and val >= 5),
-               ("City Blocks Y", "city_blocks_y", int, 5, lambda val: val is not None and val >= 5),
+    simvars = [("City Blocks X", "city_blocks_x", int, 5, lambda val: val is not None and val < 5),
+               ("City Blocks Y", "city_blocks_y", int, 5, lambda val: val is not None and val < 5),
                ("Block Dim (DU)", "block_dim", float, 0, lambda val: val is not None),
                ("Buildings", "buildings_constant", int, 0, lambda val: val is not None),
                ("Road Width", "road_width", float, 0, lambda val: val is not None),

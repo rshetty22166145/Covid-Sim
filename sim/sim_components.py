@@ -263,6 +263,7 @@ class City:
                                                                       p2.get_hunger(), p2.get_temperature(),
                                                                       p2.is_wearing_mask, p1.is_wearing_mask,
                                                                       p1.was_infected, p1.is_vaccinated)
+                        # print(prob)
                         if round(prob, 4) != 0 and models.roll_probability(round(prob, 4)):
                             p1.is_infected = True
 

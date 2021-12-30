@@ -31,24 +31,14 @@ def write_to_csv(filename: str, row: list) -> None:
     """Adds a row to a specified csv file. File name is the name of the csv, without .csv,
     and without a path. The path will be automatically set to simdata folder"""
     # open the file in the write mode
-    is_exist = True
-    if not exists('../simdata/' + filename + '.csv'):
-        is_exist = False
 
-    f = open('./simdata/' + filename + '.csv', 'w')
+    with open('./simdata/' + filename + '.csv', 'a') as f:
 
-    # create the csv writer
-    writer = csv.writer(f)
+        # create the csv writer
+        writer = csv.writer(f)
 
-    # Adds headers if new file
-    if not is_exist:
-        writer.writerow(['day_number', 'population', 'cases_since_last'])
-
-    # write a row to the csv file
-    writer.writerow(row)
-
-    # close the file
-    f.close()
+        # write a row to the csv file
+        writer.writerow(row)
 
 
 @dataclass
@@ -174,6 +164,11 @@ class SimManager:
         # Creates random value so files for each sim are unique
         self.sim_file_id = random.randint(10000, 99999)
 
+        self.time_tracker = 0
+        self.day_count = 0
+
+        write_to_csv('sim' + str(self.sim_file_id), ['day_number', 'case_proportion'])
+
     def progress_simulation(self, time_delta_s: int):  # -> dict:
         """
         Progress the simulation world by the provided time_delta_s in simulation
@@ -186,7 +181,12 @@ class SimManager:
         self.city.progress_time(time_delta_s)
 
         # Records csv data
-        write_to_csv('sim' + str(self.sim_file_id), [])
+        if self.city.time_s - self.time_tracker > 500:
+            write_to_csv('sim' + str(self.sim_file_id),
+                         [self.day_count,
+                          len([p for p in self.city.people if p.is_infected]) / len(self.city.people)])
+            self.day_count += 1
+            self.time_tracker = self.city.time_s
 
         # return self.__graphics_data.get_dynamic_sendable_info()
 

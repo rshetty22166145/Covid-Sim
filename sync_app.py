@@ -82,7 +82,7 @@ class SyncApp:
         self._sim = SimManager(self.parse_params(param_dict))
 
         # Seconds to progress the sim by each frame
-        self._sim_speed_s = 5
+        self._sim_speed_s = 10
 
         self._camera = Camera(topleft=[-20, -20], width=self._sim.city.get_bounding_box().width+40,
                               height_frac=self.WINDOW_DIMS[1] / self.WINDOW_DIMS[0])
@@ -167,6 +167,8 @@ class SyncApp:
         for p in self._sim.city.people:
             if p.location.point is not None and cam_rect.collidepoint(p.location.point.x, p.location.point.y):
                 pt = SyncApp.get_relative_pos(p.location.point, ratio, cam_rect)
+                if p.is_wearing_mask:
+                    draw_circle(Circle(pt[0], pt[1], 6 * ratio), self._window, (0, 0, 255), width=0)
                 draw_circle(Circle(pt[0], pt[1], 4 * ratio), self._window,
                             (255, 0, 0) if p.is_infected else (0, 255, 0), width=0)
 
