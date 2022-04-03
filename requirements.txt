@@ -1,0 +1,5 @@
+# Pygame 2.0+ is required
+pygame
+plotly
+pandas
+guizero

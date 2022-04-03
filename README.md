@@ -6,7 +6,7 @@ This project is for the University of Toronto CSC110 Course. The project is an a
 ### Development Progress
 
 - [ ] App:  
-  ![50%](https://progress-bar.dev/50)
+  ![15%](https://progress-bar.dev/15)
 
 ### Collaborators
 - Aleksey Panas
